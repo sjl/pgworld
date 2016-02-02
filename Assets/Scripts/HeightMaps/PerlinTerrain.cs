@@ -18,6 +18,8 @@ public class PerlinTerrain : MonoBehaviour {
 		mesh.triangles = GenTriangles();
 		mesh.uv = GenUVs();
 		mesh.RecalculateNormals();
+		transform.gameObject.AddComponent<MeshCollider>();
+		transform.GetComponent<MeshCollider>().sharedMesh = mesh;
 	}
 
 	Vector3[] GenVertices() {
