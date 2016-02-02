@@ -18,6 +18,9 @@ public class PerlinTerrain : MonoBehaviour {
 		mesh.triangles = GenTriangles();
 		mesh.uv = GenUVs();
 		mesh.RecalculateNormals();
+		if (GetComponent<MeshCollider>()) {
+			DestroyImmediate(GetComponent<MeshCollider>());
+		}
 		transform.gameObject.AddComponent<MeshCollider>();
 		transform.GetComponent<MeshCollider>().sharedMesh = mesh;
 	}
@@ -34,7 +37,6 @@ public class PerlinTerrain : MonoBehaviour {
 				x = gx*cellSize;
 				z = gz*cellSize;
 				float height = 3.0f * noise.Get(x,z);
-				//float height = Random.Range(-1.0f, +1.0f);
 				vertices[gx*l+gz] = new Vector3(x, height, z);
 			}
 		}
