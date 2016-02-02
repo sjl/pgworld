@@ -10,7 +10,6 @@ public class PerlinTerrain : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		Regenerate();
 	}
 
 	public void Regenerate() {
