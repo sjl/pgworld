@@ -1,12 +1,12 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class PerlinCalculator {
+public class PerlinNoiseSimple : Noise {
 
 	private int poolSize = 500;
 	private Vector2[] pool;
 
-	public PerlinCalculator() {
+	public override void Init() {
 		pool = new Vector2[poolSize];
 		for (int i = 0; i < pool.Length; i++) {
 			pool[i] = new Vector2(Random.value, Random.value).normalized;
@@ -22,7 +22,7 @@ public class PerlinCalculator {
 		return a + (b - a)*w;
 	}
 
-	public float Get(float x, float z) {
+	public override float Get(float x, float z) {
 		Vector2 point = new Vector2(x, z);
 
 		int x0 = Mathf.FloorToInt(x);

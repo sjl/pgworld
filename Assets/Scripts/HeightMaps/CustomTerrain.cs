@@ -1,23 +1,43 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEditor;
+using System.IO;
 
 [ExecuteInEditMode]
 [RequireComponent(typeof(MeshFilter))]
-public class PerlinTerrain : MonoBehaviour {
-	public  int sizeX = 4;
-	public  int sizeZ = 4;
+[RequireComponent(typeof(Noise))]
+public class CustomTerrain : MonoBehaviour {
+	public int sizeX = 4;
+	public int sizeZ = 4;
+	public float noiseSize = 1.0f; 
 	public float cellSize = 1.0f;
+	public string mPath = "Assets/Generated/";
+	Noise noise;
 
 	// Use this for initialization
-	void Start () {
+	void Start() {
+		noise = GetComponent<Noise>();
+		this.LoadMesh();
+		if (!GetComponent<MeshFilter>().sharedMesh) {
+			this.Regenerate();
+		}
 	}
 
 	public void Regenerate() {
-		Mesh mesh = GetComponent<MeshFilter>().mesh;
+		noise.Init();
+		Mesh mesh = GetComponent<MeshFilter>().sharedMesh;
+		if(!mesh) {
+			mesh = new Mesh();
+			GetComponent<MeshFilter>().sharedMesh = mesh;
+		}
 		mesh.vertices = GenVertices();
 		mesh.triangles = GenTriangles();
 		mesh.uv = GenUVs();
 		mesh.RecalculateNormals();
+		recalculateMeshCollider(mesh);
+	}
+
+	public void recalculateMeshCollider(Mesh mesh) {
 		if (GetComponent<MeshCollider>()) {
 			DestroyImmediate(GetComponent<MeshCollider>());
 		}
@@ -25,9 +45,23 @@ public class PerlinTerrain : MonoBehaviour {
 		transform.GetComponent<MeshCollider>().sharedMesh = mesh;
 	}
 
-	Vector3[] GenVertices() {
-		PerlinCalculator noise = new PerlinCalculator();
+	public void SaveMesh() {
+		Mesh mesh = Instantiate<Mesh>(GetComponent<MeshFilter>().sharedMesh);
+		if (!AssetDatabase.IsValidFolder(Path.GetDirectoryName(mPath))) {
+			AssetDatabase.CreateFolder("Assets", "Generated");
+		}
+		AssetDatabase.CreateAsset(mesh, mPath + gameObject.name + ".asset");
+	}
 
+	public void LoadMesh() {
+		Mesh mesh = Instantiate(AssetDatabase.LoadMainAssetAtPath(mPath + gameObject.name + ".asset") as Mesh);
+		if (mesh) {
+			GetComponent<MeshFilter>().mesh = mesh;
+		}
+		recalculateMeshCollider(mesh);
+	}
+
+	Vector3[] GenVertices() {
 		float x, z;
 		int w = (sizeX+1);
 		int l = (sizeZ+1);
@@ -36,7 +70,7 @@ public class PerlinTerrain : MonoBehaviour {
 			for (int gz = 0; gz < l; gz++) {
 				x = gx*cellSize;
 				z = gz*cellSize;
-				float height = 3.0f * noise.Get(x,z);
+				float height = (noiseSize * noise.Get(x,z));
 				vertices[gx*l+gz] = new Vector3(x, height, z);
 			}
 		}
