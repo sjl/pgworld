@@ -5,7 +5,7 @@ public class PerlinNoise : Noise {
 
 	public float baseOctave = 0.25f;
 	public float[] weights = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
-	private int poolSize = 500;
+	private int poolSize = 5000;
 	private Vector2[] pool;
 
 	public override void Init() {
