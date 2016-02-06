@@ -6,35 +6,33 @@ using System.IO;
 [ExecuteInEditMode]
 [RequireComponent(typeof(MeshFilter))]
 [RequireComponent(typeof(Noise))]
+[RequireComponent(typeof(Erosion))]
 public class CustomTerrain : MonoBehaviour {
 	public int sizeX = 4;
 	public int sizeZ = 4;
 	public float noiseSize = 1.0f; 
 	public float cellSize = 1.0f;
 	private string mPath = "Assets/Generated/";
-	Noise noise;
 
-	// Use this for initialization
+	Noise noise;
+	Erosion erosion;
+
 	void Start() {
 		noise = GetComponent<Noise>();
-		this.LoadMesh();
-		if (!GetComponent<MeshFilter>().sharedMesh) {
-			this.Regenerate();
-		}
+		erosion = GetComponent<Erosion>();
 	}
 
 	public void Regenerate() {
 		noise.Init();
-		Mesh mesh = GetComponent<MeshFilter>().sharedMesh;
-		if(!mesh) {
-			mesh = new Mesh();
-			GetComponent<MeshFilter>().sharedMesh = mesh;
-		}
+		Mesh mesh = EnsureMesh();
 		mesh.vertices = GenVertices();
-		mesh.triangles = GenTriangles();
-		mesh.uv = GenUVs();
-		mesh.RecalculateNormals();
-		recalculateMeshCollider(mesh);
+		FixMesh();
+	}
+
+	public void Erode() {
+		Mesh mesh = EnsureMesh();
+		mesh.vertices = erosion.Erode(mesh.vertices, sizeX, sizeZ);
+		FixMesh();
 	}
 
 	public void recalculateMeshCollider(Mesh mesh) {
@@ -59,6 +57,26 @@ public class CustomTerrain : MonoBehaviour {
 			GetComponent<MeshFilter>().mesh = mesh;
 		}
 		recalculateMeshCollider(mesh);
+	}
+
+	void FixMesh() {
+		// Bookkeeping stuff that needs to be rerun after you modify
+		// the vertices of a mesh.
+		Mesh mesh = GetComponent<MeshFilter>().sharedMesh;
+		mesh.triangles = GenTriangles();
+		mesh.uv = GenUVs();
+		mesh.RecalculateNormals();
+		recalculateMeshCollider(mesh);
+	}
+
+	Mesh EnsureMesh() {
+		// Make sure we have a mesh, creating it if necessary, and return it.
+		Mesh mesh = GetComponent<MeshFilter>().sharedMesh;
+		if(!mesh) {
+			mesh = new Mesh();
+			GetComponent<MeshFilter>().sharedMesh = mesh;
+		}
+		return mesh;
 	}
 
 	Vector3[] GenVertices() {
