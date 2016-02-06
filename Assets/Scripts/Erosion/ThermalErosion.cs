@@ -29,23 +29,14 @@ public class ThermalErosion : Erosion {
 				int targetx = xcoord;
 				int targetz = zcoord;
 
-				// Use a rotated Von Neumann neighborhood, which looks like:
-				//
-				// XX  XX
-				// XX  XX
-				//   **
-				//   **
-				// XX  XX
-				// XX  XX
-				//
-				// This works slightly better than a normally-aligned one, and is
-				// a lot faster than a full Moore neighborhood.
-				for (int dx = -1; dx <= 1; dx += 2) {
-					for (int dz = -1; dz <= 1; dz += 2) {
+				// Use a full Moore neighborhood.  A Von Neumann is faster but can result
+				// in weird artifacts sometimes.
+				for (int dx = -1; dx <= 1; dx += 1) {
+					for (int dz = -1; dz <= 1; dz += 1) {
 						int nx = xcoord + dx;
 						int nz = zcoord + dz;
 
-						if (nx < 0 || nx >= width || nz < 0 || nz >= length) {
+						if (nx < 0 || nx >= width || nz < 0 || nz >= length || (nx == 0 && nz == 0)) {
 							// Skip neighbor cells that fall off the map.
 							continue;
 						}
