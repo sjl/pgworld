@@ -22,3 +22,6 @@ public class NaiveTerrainErosionEditor : TerrainErosionEditor {}
 [CustomEditor(typeof(ThermalTerrainErosion))]
 public class ThermalTerrainErosionEditor : TerrainErosionEditor {}
 
+[CustomEditor(typeof(HydraulicTerrainErosion))]
+public class HydraulicTerrainErosionEditor : TerrainErosionEditor {}
+
