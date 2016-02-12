@@ -2,8 +2,8 @@
 using System.Collections;
 
 public class ThermalTerrainErosion : TerrainErosion {
-	public float talus = 0.1f;
-	public float strength = 0.5f;
+	public float talus = 0.01f;
+	public float strength = 0.2f;
 	public bool reverse = false;
 	public int iterations = 1;
 
