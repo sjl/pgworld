@@ -31,8 +31,11 @@ public class HydraulicTerrainErosion : TerrainErosion {
 
 					// dissolve sediment
 					float soilDissolved = (soilSolubility * currentWater[z, x]);
-					nextHeight[z, x] = currentHeight[z, x] - soilDissolved;
-					nextSediment[z, x] = currentSediment[z, x] + soilDissolved;
+					currentSediment[z, x] += soilDissolved;
+					currentHeight[z, x] -= soilDissolved;
+
+					nextHeight[z, x] = currentHeight[z, x];
+					nextSediment[z, x] = currentSediment[z, x];
 				}
 			}
 
@@ -114,8 +117,7 @@ public class HydraulicTerrainErosion : TerrainErosion {
 							// We assume sediment is uniformly distributed in the water, so we
 							// move an amount of sediment proportional to how much water we
 							// just moved.
-							float sedimentForNeighbor = currentSediment[z, x]
-														* (waterForNeighbor / waterToMove);
+							float sedimentForNeighbor = currentSediment[z, x] * (waterForNeighbor / waterToMove);
 
 							nextSediment[z, x] -= sedimentForNeighbor;
 							nextSediment[nz, nx] += sedimentForNeighbor;
