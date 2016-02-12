@@ -53,18 +53,30 @@ public class Vegetation: MonoBehaviour {
 											terrainData.alphamapHeight, 
 											terrainData.alphamapLayers];
 
-		var heightMap = terrainData.GetHeights(0, 0, terrainData.heightmapWidth, terrainData.heightmapHeight);
+		var heightMap = terrainData.GetHeights (0, 0, terrainData.heightmapWidth, terrainData.heightmapHeight);
 
 		for (int y = 0; y < terrainData.alphamapHeight; y++) {
 			for (int x = 0; x < terrainData.alphamapWidth; x++) {
 				// read the height at this location
-				float height = heightMap[y, x];
+				float height = heightMap [y, x];
 
 				if (height > 0.9) {
-					map[y,x,0] = 0;
-					map[y,x,1] = 0;
-					map[y,x,2] = 1 - height + 0.7f;
-					map[y,x,3] = height - 0.7f;
+					if (height > 0.96f) {
+						map [y, x, 0] = 0;
+						map [y, x, 1] = 0;
+						map [y, x, 2] = 1 - height;
+						map [y, x, 3] = height;
+					} else if (height < 0.94f) {
+						map [y, x, 0] = 0;
+						map [y, x, 1] = 0;
+						map [y, x, 2] = height;
+						map [y, x, 3] = 1 - height;
+					} else {
+						map [y, x, 0] = 0;
+						map [y, x, 1] = 0;
+						map [y, x, 2] = 1 - height + 0.7f;
+						map [y, x, 3] = height - 0.7f;
+					}
 				} else {
 					map[y,x,0] = 2*(1 - height)/3;
 					map[y,x,1] = (1 - height)/3;
