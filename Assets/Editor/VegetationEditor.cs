@@ -8,8 +8,12 @@ public class VegetationEditor : Editor {
 		DrawDefaultInspector ();
 
 		Vegetation vegetation = (Vegetation)target;
-		if (GUILayout.Button ("Run")) {
-			vegetation.Run();
+
+		if (GUILayout.Button ("Run texturing")) {
+			vegetation.RunTexturing();
 		}
 	}
 }
+
+[CustomEditor(typeof(TextureVegetation))]
+public class TextureVegetationEditor : VegetationEditor {}
