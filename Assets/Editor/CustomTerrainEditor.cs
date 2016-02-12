@@ -12,10 +12,6 @@ public class CustomTerrainEditor : Editor {
 			nt.Regenerate();
 		}
 
-		if (GUILayout.Button("Erode")) {
-			nt.Erode();
-		}
-
 		if (GUILayout.Button("Save")) {
 			nt.SaveMesh();
 		}

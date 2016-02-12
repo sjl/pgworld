@@ -6,7 +6,6 @@ using System.IO;
 [ExecuteInEditMode]
 [RequireComponent(typeof(MeshFilter))]
 [RequireComponent(typeof(Noise))]
-[RequireComponent(typeof(Erosion))]
 public class CustomTerrain : MonoBehaviour {
 	public int sizeX = 4;
 	public int sizeZ = 4;
@@ -15,23 +14,15 @@ public class CustomTerrain : MonoBehaviour {
 	private string mPath = "Assets/Generated/";
 
 	Noise noise;
-	Erosion erosion;
 
 	void Start() {
 		noise = GetComponent<Noise>();
-		erosion = GetComponent<Erosion>();
 	}
 
 	public void Regenerate() {
 		noise.Init();
 		Mesh mesh = EnsureMesh();
 		mesh.vertices = GenVertices();
-		FixMesh();
-	}
-
-	public void Erode() {
-		Mesh mesh = EnsureMesh();
-		mesh.vertices = erosion.Erode(mesh.vertices, sizeX, sizeZ);
 		FixMesh();
 	}
 

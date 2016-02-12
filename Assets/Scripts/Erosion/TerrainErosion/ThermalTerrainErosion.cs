@@ -2,9 +2,10 @@
 using System.Collections;
 
 public class ThermalTerrainErosion : TerrainErosion {
-	public float talus = 0.1f;
-	public float strength = 0.5f;
+	public float talus = 0.01f;
+	public float strength = 0.2f;
 	public bool reverse = false;
+	public float reverseTalusCutoff = 0.003f;
 	public int iterations = 1;
 
 	private float[,] heightmap;
@@ -46,7 +47,11 @@ public class ThermalTerrainErosion : TerrainErosion {
 				// roughly the same thing anyway.
 				//
 				// We also allow for "reverse thermal erosion" by inverting the check.
-				if (reverse ? maxDifference <= talus : maxDifference > talus) {
+				bool shouldMove = reverse
+					? (maxDifference <= talus && maxDifference >= reverseTalusCutoff)
+					: maxDifference > talus;
+				
+				if (shouldMove) {
 					float toMove = maxDifference / 2.0f * strength;
 					heightmap[zcoord, xcoord] -= toMove;
 					heightmap[targetz, targetx] += toMove;
