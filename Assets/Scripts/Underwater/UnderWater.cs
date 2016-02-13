@@ -9,8 +9,8 @@ public class UnderWater : MonoBehaviour {
 	public float deepLevel = 50;
 	private bool isUnderwater, canSwim;
 	public Color normalColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
-	public Color deepColor = new Color(0.0f, 0.0f, 0.0f, 0.5f);
-	public Color underwaterColor = new Color(0, 0.4f, 0.7f, 0.6f);
+	public Color deepColor = new Color(0.0f, 0.0f, 0.0f, 0.8f);
+	public Color underwaterColor = new Color(0, 0.4f, 0.7f, 0.1f);
 	private Vector3 above, below, swimUp, sink;
 	public GameObject waterplane = null;
 	public GameObject controller = null;
