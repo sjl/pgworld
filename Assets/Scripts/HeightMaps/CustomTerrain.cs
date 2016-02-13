@@ -25,14 +25,14 @@ public class CustomTerrain : MonoBehaviour {
 		mesh.vertices = GenVertices();
 		FixMesh();
 	}
-
+	/*
 	public void recalculateMeshCollider(Mesh mesh) {
 		if (GetComponent<MeshCollider>()) {
 			DestroyImmediate(GetComponent<MeshCollider>());
 		}
 		transform.gameObject.AddComponent<MeshCollider>();
 		transform.GetComponent<MeshCollider>().sharedMesh = mesh;
-	}
+	}*/
 
 	public void SaveMesh() {
 		Mesh mesh = Instantiate<Mesh>(GetComponent<MeshFilter>().sharedMesh);
@@ -47,7 +47,7 @@ public class CustomTerrain : MonoBehaviour {
 		if (mesh) {
 			GetComponent<MeshFilter>().mesh = mesh;
 		}
-		recalculateMeshCollider(mesh);
+		//recalculateMeshCollider(mesh);
 	}
 
 	void FixMesh() {
@@ -57,7 +57,7 @@ public class CustomTerrain : MonoBehaviour {
 		mesh.triangles = GenTriangles();
 		mesh.uv = GenUVs();
 		mesh.RecalculateNormals();
-		recalculateMeshCollider(mesh);
+		//recalculateMeshCollider(mesh);
 	}
 
 	Mesh EnsureMesh() {
