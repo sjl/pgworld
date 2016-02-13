@@ -1,14 +1,17 @@
 ﻿using System;
+using UnityEngine;
 using System.Collections;
 
 public class TextureVegetation : Vegetation
 {
+	public float waterHeight;
+	public float slopeValue;
 	private int width;
 	private int height;
 	private float[,] heightMap;
 	private float[,,] map;
 
-	public override float[,,] Textured(int width, int height, float[,] heightMap, float[,,] map) {
+	public override float[,,] Texture(int width, int height, float[,] heightMap, float[,,] map) {
 		this.width = width;
 		this.height = height;
 		this.heightMap = heightMap;
@@ -19,13 +22,13 @@ public class TextureVegetation : Vegetation
 		return this.map;
 	}
 								
-	private void SlopeAndHeightTexture ()
+	private void SlopeAndHeightTexture()
 	{
 		for (int y = 0; y < height; y++) {
 			for (int x = 0; x < width; x++) {
 
 				// read the height at this location
-				float locationHeight = heightMap [y, x];
+				float locationHeight = heightMap[y, x];
 
 				// used for slope texturing
 				var maxDifference = 0.0f;
@@ -50,36 +53,49 @@ public class TextureVegetation : Vegetation
 					}
 				}
 
-				if (locationHeight > 0.9) { // mountain tops texturing
+				if (locationHeight < waterHeight) {
+					map[y, x, 0] = 0;
+					map[y, x, 1] = 0;
+					map[y, x, 2] = locationHeight;
+					map[y, x, 3] = 0;
+					map[y, x, 4] = 1 - locationHeight;
+				} else if (locationHeight > 0.9) { // mountain tops texturing
 					if (height > 0.96f) {
-						map [y, x, 0] = 0;
-						map [y, x, 1] = 0;
-						map [y, x, 2] = 1 - locationHeight;
-						map [y, x, 3] = locationHeight;
+						map[y, x, 0] = 0;
+						map[y, x, 1] = 0;
+						map[y, x, 2] = 1 - locationHeight;
+						map[y, x, 3] = locationHeight;
+						map[y, x, 4] = 0;
 					} else if (locationHeight < 0.94f) {
-						map [y, x, 0] = 0;
-						map [y, x, 1] = 0;
-						map [y, x, 2] = locationHeight;
-						map [y, x, 3] = 1 - locationHeight;
+						map[y, x, 0] = 0;
+						map[y, x, 1] = 0;
+						map[y, x, 2] = locationHeight;
+						map[y, x, 3] = 1 - locationHeight;
+						map[y, x, 4] = 0;
 					} else {
-						map [y, x, 0] = 0;
-						map [y, x, 1] = 0;
-						map [y, x, 2] = 1 - locationHeight + 0.7f;
-						map [y, x, 3] = locationHeight - 0.7f;
+						map[y, x, 0] = 0;
+						map[y, x, 1] = 0;
+						map[y, x, 2] = 1 - locationHeight + 0.7f;
+						map[y, x, 3] = locationHeight - 0.7f;
+						map[y, x, 4] = 0;
 					}
-				} else if (maxDifference > 0.0029) { // slope texturing
-					map [y, x, 0] = 0;
-					map [y, x, 1] = 0.15f;
-					map [y, x, 2] = 0.84f;
-					map [y, x, 3] = 0.01f;
+				} else if (maxDifference > slopeValue) { // slope texturing
+					map[y, x, 0] = 0;
+					map[y, x, 1] = 0.15f;
+					map[y, x, 2] = 0.84f;
+					map[y, x, 3] = 0.01f;
+					map[y, x, 4] = 0;
 				} else { // default texturing based on height
-					map[y,x,0] = 2*(1 - locationHeight)/3;
-					map[y,x,1] = (1 - locationHeight)/3;
-					map[y,x,2] = locationHeight;
-					map[y,x,3] = 0;
+					map[y, x, 0] = 2*(1 - locationHeight)/3;
+					map[y, x, 1] = (1 - locationHeight)/3;
+					map[y, x, 2] = locationHeight;
+					map[y, x, 3] = 0;
+					map[y, x, 4] = 0;
 				}
 			}
 		}
 	}
+
+	public override void AddTrees (int width, int height, float[,] heightMap, Terrain terrain) {}
 }
 
