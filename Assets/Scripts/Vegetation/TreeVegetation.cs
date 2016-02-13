@@ -3,6 +3,7 @@ using System.Collections;
 
 public class TreeVegetation : Vegetation
 {
+	public float waterHeight;
 	private int width;
 	private int height;
 	private float[,] heightMap;
@@ -48,7 +49,7 @@ public class TreeVegetation : Vegetation
 					}
 				}
 
-				if (locationHeight < 0.9 && maxDifference < 0.0029) { // the slope and height is within limits
+				if (locationHeight < 0.9 && maxDifference < 0.0029 && locationHeight > waterHeight) { // the slope and height is within limits
 					var rnd = Random.Range (0, 600);
 
 					if (rnd == 0) {
