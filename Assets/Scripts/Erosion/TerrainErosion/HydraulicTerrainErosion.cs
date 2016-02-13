@@ -6,6 +6,8 @@ public class HydraulicTerrainErosion : TerrainErosion {
 	public float evaporationRatio = 0.5f; // ke
 	public float sedimentCapacity = 0.01f; // kc
 	public float soilSolubility = 0.01f; // ks
+	public float rainAltitude = 0.4f;
+	public float rainFalloff = 1.0f;
 
 	public int iterations = 1;
 
@@ -25,8 +27,17 @@ public class HydraulicTerrainErosion : TerrainErosion {
 			// garbage values in the next* maps.
 			for (int z = 0; z < height; z++) {
 				for (int x = 0; x < width; x++) {
+					float rainRatio;
+					float h = currentHeight[z, x];
+
+					if (h < rainAltitude) {
+						rainRatio = 1.0f;
+					} else {
+						rainRatio = Mathf.Lerp(1.0f, 0.0f, (h - rainAltitude) / rainAltitude);
+					}
+
 					// add rain
-					currentWater[z, x] += rainfallAmount;
+					currentWater[z, x] += rainfallAmount * Mathf.Pow(rainRatio, rainFalloff);
 					nextWater[z, x] = currentWater[z, x];
 
 					// dissolve sediment
