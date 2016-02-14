@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class BasicTextureVegetation : Vegetation
 {
@@ -10,6 +11,8 @@ public class BasicTextureVegetation : Vegetation
 	private float[,] heightMap;
 	private float[,,] map;
 	private Terrain terrain;
+	private TerrainData terrainData;
+	private List<TreeInstance> TreeInstances;
 
 	public override float[,,] Texture(int width, int height, float[,] heightMap, float[,,] map) {
 		this.width = width;
@@ -155,6 +158,26 @@ public class BasicTextureVegetation : Vegetation
 				}
 			}
 		}
+	}
+
+	public override void RemoveTrees(TerrainData terrainData) {
+		this.terrainData = terrainData;
+
+		RemoveTrees();
+	}
+
+	private void RemoveTrees ()
+	{
+		// Get all tree instances and delete them
+		TreeInstances = new List<TreeInstance> (terrainData.treeInstances);
+		for (var i = 0; i < TreeInstances.Count; i++) {
+			TreeInstances.RemoveAt(i);
+		}
+		terrainData.treeInstances = TreeInstances.ToArray();
+
+		// Now refresh the terrain, getting rid of the darn collider
+        float[,] heights = terrainData.GetHeights(0, 0, 0, 0);
+        terrainData.SetHeights(0, 0, heights);
 	}
 }
 

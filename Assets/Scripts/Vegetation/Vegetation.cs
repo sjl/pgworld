@@ -46,8 +46,18 @@ public abstract class Vegetation: MonoBehaviour {
 		AddTrees(width, height, heightMap, terrain);
 	}
 
+	public void RunRemoveTrees() {
+		// Get a reference to the terrain
+		Terrain terrain = GetComponent<Terrain>();
+
+		var terrainData = terrain.terrainData;
+
+		RemoveTrees(terrainData);
+	}
+
 	public abstract float[,,] Texture(int width, int height, float[,] heightMap, float[,,] map);
 	public abstract void AddTrees(int width, int height, float[,] heightMap, Terrain terrain);
+	public abstract void RemoveTrees(TerrainData terrainData);
 
 	// Update is called once per frame
 	void Update() {
