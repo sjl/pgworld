@@ -5,8 +5,7 @@ using UnityEditor;
 [ExecuteInEditMode]
 [RequireComponent(typeof(Terrain))]
 public abstract class Vegetation: MonoBehaviour {
-	TerrainData terrainData;
-	Terrain terrain;
+	public float waterHeight;
 
 	// Use this for initialization
 	void Start() {
@@ -16,10 +15,10 @@ public abstract class Vegetation: MonoBehaviour {
 	// Texturing
 	public void RunTexturing() {
 		// Get a reference to the terrain
-		terrain = GetComponent<Terrain>();
+		Terrain terrain = GetComponent<Terrain>();
 
 		// Get a reference to the terrain data
-		terrainData = terrain.terrainData;
+		var terrainData = terrain.terrainData;
 
 		var width = terrainData.alphamapWidth;
 		var height = terrainData.alphamapHeight;
@@ -34,7 +33,7 @@ public abstract class Vegetation: MonoBehaviour {
 
 	public void RunTreeGenerator() {
 		// Get a reference to the terrain
-		terrain = GetComponent<Terrain>();
+		Terrain terrain = GetComponent<Terrain>();
 
 		// Get a reference to the terrain data
 		var terrainData = terrain.terrainData;
