@@ -14,7 +14,11 @@ public class VegetationEditor : Editor {
 		}
 
 		if (GUILayout.Button("Run tree generator")) {
-				vegetation.RunTreeGenerator();
+			vegetation.RunTreeGenerator();
+		}
+
+		if (GUILayout.Button("Remove trees")) {
+			vegetation.RunRemoveTrees();
 		}
 	}
 
