@@ -36,3 +36,17 @@ ehthumbs.db
 # Personal Playground Scenes
 
 Assets/sjl.unity
+
+# Latex garbage
+paper/*.aux
+paper/*.fls
+paper/*.log
+paper/*.toc
+paper/*.fdb_latexmk
+paper/*.zip
+paper/*.bbl
+paper/*.blg
+paper/*.bcf
+paper/*.run.xml
+paper/paper.out
+paper/paper.pdf
