@@ -114,6 +114,26 @@ compromise is to combine all three erosion algorithms:
 
 \section{Vegetation}
 \label{sec:vegetation}
+The vegetation is used to make the terrain look more naturally. That includes texturing our terrain and adding 3D tree objects.
+
+\subsection{Texturing}
+\label{sec:texturing}
+Textures will serve as the background image on the terrain. Texturing with the painting tool is really time consuming, especially when the terrain gets bigger. A script was created that textured the terrain automatically, depending on the height of the terrain and the slope as well.
+
+\subsubsection{Height texturing}
+\label{sec:heightTexture}
+Height texturing works by iterating through every point in the heightmap and adding a texture to this particular point depending on its height. \newline
+Terrain below the water surface have their own textures as well. The height of the water surface is declared from a global value by the user. \newline
+Mountain peeks also have their own texture (usually a snow). The height of the mountain top is also declared from a global value by the user. The textures fades out from top to bottom.
+
+
+\subsubsection{Slope texturing}
+\label{sec:slopeTexture}
+Slope texturing works almost like the height texturing but for each point, its neighbor points are checked and the height difference is calculated to get their slope. Textures are then added to the terrain depending on the slope.
+
+\subsection{Adding trees}
+\label{sec:trees}
+Trees can be added to the terrain to make it look more natural. The trees in Unity 5 are solid 3D objects that grow from the surface. Billboarding (a type of optimisation) is used by Unity to maintain a good rendering performance. Instead of manually paint the trees on the terrain, a script was created to automatically add the trees to the terrain. It works by checking if the terrain is flat, same as the slope and height texturing, and assigning random trees to the terrain. Fewer trees are where the height value of the terrain is high. As the height increases the oxygen gets thinner so the height of the trees also tend to be smaller. 
 
 \section{Water}
 \label{sec:water}
