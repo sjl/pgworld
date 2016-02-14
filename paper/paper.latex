@@ -1,0 +1,45 @@
+\documentclass{article}
+
+\usepackage[utf8]{inputenc}
+
+\title{%
+    Procedural World Generation in Unity 5
+\\ \large GEDE Spring 2016}
+\author{Darri Konráðsson, Einar Gissurarson, Steve Losh}
+
+\date{\today}
+
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath}
+\usepackage{units}
+
+\usepackage{textcomp}
+\usepackage{gensymb}
+\usepackage{graphicx}
+\usepackage{subfig}
+
+\usepackage[a4paper,hmargin=3.5cm,vmargin=3.0cm,bindingoffset=0.0cm]{geometry}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+\label{sec:intro}
+
+What we focused on
+Resources used
+
+\section{Noise}
+\label{sec:noise}
+
+\section{Water}
+\label{sec:water}
+
+\section{Erosion}
+\label{sec:erosion}
+
+\section{Vegetation}
+\label{sec:vegetation}
+
+\end{document}
