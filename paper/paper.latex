@@ -54,11 +54,13 @@ as research papers (cited later):
 
 \begin{enumerate}
     \item{\fnurl{Learn to Code by Making Games}{https://www.udemy.com/unitycourse/}}
+    \item{\fnurl{Creating Meshes with Code in Unity}{https://www.udemy.com/proceduralgeneration/}}
 \end{enumerate}
 
 \section{Noise}
 \label{sec:noise}
 
+We build our heightmap, by giving randomized values to the Y co-ordinates in a (X,Y,Z) grid. Obviously, putting a completly randomized number in each co-ordinate isn't gonna give us an interesting surface, so we need to implement some form of gradient calculation, to smooth things out. For this we use {\fnurl{Perlin Noise}{https://en.wikipedia.org/wiki/Perlin_noise\#!/content/54630}}. Furthermore, by calculating several instances of Perlin Nose and adding them on top of each other, we create a fractal Perlin Noise that gives us a much more organic look to the height map.
 \section{Erosion}
 \label{sec:erosion}
 
@@ -115,6 +117,8 @@ compromise is to combine all three erosion algorithms:
 
 \section{Water}
 \label{sec:water}
+
+Out waterplane was generated from the standard assets library in Unity. However, since the plane is only visible from one side, a script was made that flips it 180 degrees, when the player crosses the plane, making it visible from the underside as well. The underwater environment was then created using a script, that modifies the Global Fog variable, reducing visibilty and turning everything a shade of blue. The further down you go in the water, the darker and thicker the fog becomes, to simulate less light traveling down the water. Lastly, we have a projector using a homebrewed shader, to create caustic light effects. The shader allows us to set the scale of the caustics and to set up gradual far clipping, allowing us to resize the projector to fit any plane as well as give a realistic illusion of less light traveling to deeper water.
 
 \bibliographystyle{apacite}
 \bibliography{references}
