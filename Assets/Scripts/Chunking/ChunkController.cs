@@ -15,6 +15,7 @@ public class ChunkController : MonoBehaviour {
 
 	public GameObject player;
 	public int chunkExponent = 6;
+	public int chunkHorizon = 3;
 	public float chunkScale = 1;
 
 	private Hashtable chunks;
@@ -57,8 +58,8 @@ public class ChunkController : MonoBehaviour {
 		int cx = (int) (px / chunkWidth);
 		int cz = (int) (pz / chunkWidth);
 
-		for (int dx = -3; dx <= 3; dx++) {
-			for (int dz = -3; dz <= 3; dz++) {
+		for (int dx = -chunkHorizon; dx <= chunkHorizon; dx++) {
+			for (int dz = -chunkHorizon; dz <= chunkHorizon; dz++) {
 				ensureChunk(new ChunkCoord(cx + dx, cz + dz));
 			}
 		}
