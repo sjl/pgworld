@@ -17,6 +17,11 @@ public class PerlinNoise : Noise {
 
 	private Vector2 GradientAt(int x, int y) {
 		int index = Mathf.RoundToInt(0.5f*(x+y)*(x+y+1)+y) % poolSize;
+
+		if (index < 0) {
+			index = poolSize + index;
+		}
+
 		return pool[index];
 	}
 
@@ -59,8 +64,8 @@ public class PerlinNoise : Noise {
 		float n01 = Vector2.Dot(GradientAt(x0,y1), point-p01);
 		float n11 = Vector2.Dot(GradientAt(x1,y1), point-p11);
 
-		float wX = x-x0/x1-x0;
-		float wY = y-y0/y1-y0;
+		float wX = (x-x0)/(x1-x0);
+		float wY = (y-y0)/(y1-y0);
 
 		return Lerp (
 			Lerp(n00, n10, wX),
