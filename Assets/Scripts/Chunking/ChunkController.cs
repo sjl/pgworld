@@ -30,6 +30,8 @@ public class ChunkController : MonoBehaviour {
 
 	void Start () {
 		noise = new PerlinNoise();
+		noise.baseOctave = noiseBaseOctave;
+		noise.weights = noiseWeights;
 		noise.Init();
 
 		chunks = new Hashtable();
@@ -56,6 +58,8 @@ public class ChunkController : MonoBehaviour {
 		}
 
 		float scale = 1 / (max - min);
+		print(max);
+		print(min);
 
 		for (int z = 0; z < height; z++) {
 			for (int x = 0; x < width; x++) {
@@ -103,9 +107,8 @@ public class ChunkController : MonoBehaviour {
 			}
 		}
 
-		NormalizeHeightmap(heightmap, width, height);
+		/* NormalizeHeightmap(heightmap, width, height); */
 		tData.SetHeights(0, 0, heightmap);
-		stitchTerrain(tData, c);
 	}
 
 	TerrainData makeChunk(ChunkCoord c) {
@@ -122,6 +125,7 @@ public class ChunkController : MonoBehaviour {
 				chunkWidth * c.z);
 
 		noiseTerrain(tData, c);
+		stitchTerrain(tData, c);
 
 		return tData;
 	}

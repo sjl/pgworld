@@ -16,11 +16,9 @@ public class PerlinNoise : Noise {
 	}
 
 	private Vector2 GradientAt(int x, int y) {
+		x = System.Math.Abs(x);
+		y = System.Math.Abs(y);
 		int index = Mathf.RoundToInt(0.5f*(x+y)*(x+y+1)+y) % poolSize;
-
-		if (index < 0) {
-			index = poolSize + index;
-		}
 
 		return pool[index];
 	}
@@ -36,7 +34,7 @@ public class PerlinNoise : Noise {
 			total += w * Raw(Scale*x, Scale*y);
 			Scale *= 2.0f;
 		}
-		return total;
+		return total + 0.5f;
 	}
 
 	private float Raw(float x, float y) {
