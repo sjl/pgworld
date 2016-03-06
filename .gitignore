@@ -36,6 +36,7 @@ ehthumbs.db
 # Personal Playground Scenes
 
 Assets/sjl.unity
+Assets/sjl.unity.meta
 
 # Latex garbage
 paper/*.aux
