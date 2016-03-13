@@ -22,6 +22,9 @@ public class ChunkController : MonoBehaviour {
 	public float noiseBaseOctave = 0.25f;
 	public float[] noiseWeights = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
 
+	public Texture2D texture;
+	public Texture2D normal;
+
 	private Hashtable chunks;
 	private int chunkResolution;
 	private float chunkWidth;
@@ -109,6 +112,17 @@ public class ChunkController : MonoBehaviour {
 		tData.SetHeights(0, 0, heightmap);
 	}
 
+	void textureTerrain(TerrainData tData) {
+		SplatPrototype[] splats = new SplatPrototype[1];
+
+		splats[0] = new SplatPrototype();
+		splats[0].texture = texture;
+		splats[0].normalMap = normal;
+		splats[0].tileSize = new Vector2(5, 5);
+
+		tData.splatPrototypes = splats;
+	}
+
 	TerrainData makeChunk(ChunkCoord c) {
 		TerrainData tData = new TerrainData();
 
@@ -124,6 +138,7 @@ public class ChunkController : MonoBehaviour {
 
 		noiseTerrain(tData, c);
 		stitchTerrain(tData, c);
+		textureTerrain(tData);
 
 		return tData;
 	}
