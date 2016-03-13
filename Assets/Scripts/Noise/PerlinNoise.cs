@@ -8,10 +8,17 @@ public class PerlinNoise : Noise {
 	private int poolSize = 6000;
 	private Vector2[] pool;
 
+	private float normalization;
+
 	public override void Init() {
 		pool = new Vector2[poolSize];
 		for (int i = 0; i < pool.Length; i++) {
 			pool[i] = new Vector2(Random.value, Random.value).normalized;
+		}
+
+		normalization = 0.0f;
+		foreach (float w in weights) {
+			normalization += w;
 		}
 	}
 
@@ -34,7 +41,7 @@ public class PerlinNoise : Noise {
 			total += w * Raw(Scale*x, Scale*y);
 			Scale *= 2.0f;
 		}
-		return total + 0.5f;
+		return ((total / normalization) + 1.0f) / 2;
 	}
 
 	private float Raw(float x, float y) {
