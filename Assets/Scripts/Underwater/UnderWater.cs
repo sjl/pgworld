@@ -3,7 +3,7 @@ using System.Collections;
  
 public class UnderWater : MonoBehaviour {
  
-	//This script enables underwater effects. Attach to player.
+	//This script enables underwater effects. Attach to player camera.
 
     public float underwaterLevel = 0;
 	public float deepLevel = 50;
@@ -13,13 +13,20 @@ public class UnderWater : MonoBehaviour {
 	public Color underwaterColor = new Color(0, 0.4f, 0.7f, 0.1f);
 	private Vector3 above, below, swimUp, sink;
 	public GameObject waterplane = null;
+	public GameObject projector = null;
 
 	void Start() {
+		projector.transform.position = new Vector3(transform.position.x, underwaterLevel, transform.position.z);
 		above = new Vector3(0.0f, 0.0f, 0.0f);
 		below = new Vector3(180.0f, 0.0f, 0.0f);
+		if (RenderSettings.fog == false) {
+		RenderSettings.fog = true;
+		}
 	}
 
     void Update() {
+    	waterplane.transform.position = new Vector3(transform.position.x, underwaterLevel, transform.position.z);
+		
 		if ((transform.position.y < underwaterLevel) != isUnderwater)
 			isUnderwater = transform.position.y < underwaterLevel;
 		if (isUnderwater) {
