@@ -13,19 +13,22 @@ public class GrassPlacement : MonoBehaviour
 	public GrassPlacement ()
 	{
 	}
-	// [MenuItem ("Terrain/Mass Grass Placement")]
+
 	public void RunGrassGenerator () {
 		// Get a reference to the terrain
 		Terrain terrain = GetComponent<Terrain>();
 
-        int alphamapWidth = terrain.terrainData.alphamapWidth;
-        int alphamapHeight = terrain.terrainData.alphamapHeight;
-        int detailWidth = terrain.terrainData.detailResolution;
+		// Get a reference to the terrain
+		var terrainData = terrain.terrainData;
+
+        int alphamapWidth = terrainData.alphamapWidth;
+        int alphamapHeight = terrainData.alphamapHeight;
+        int detailWidth = terrainData.detailResolution;
         int detailHeight = detailWidth;
        
         float resolutionDiffFactor = (float)alphamapWidth / detailWidth;
        
-        float[,,] splatmap = terrain.terrainData.GetAlphamaps(0, 0, alphamapWidth, alphamapHeight);
+        float[,,] splatmap = terrainData.GetAlphamaps(0, 0, alphamapWidth, alphamapHeight);
        
         int[,] newDetailLayer = new int[detailWidth, detailHeight];
 
@@ -47,6 +50,6 @@ public class GrassPlacement : MonoBehaviour
                 }
             }
         }
-        terrain.terrainData.SetDetailLayer(0, 0, grassType, newDetailLayer); 
+        terrainData.SetDetailLayer(0, 0, grassType, newDetailLayer); 
 	}
 }

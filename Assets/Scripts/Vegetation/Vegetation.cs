@@ -7,10 +7,9 @@ using UnityEditor;
 public abstract class Vegetation: MonoBehaviour {
 	public float waterHeight;
 
-	// Use this for initialization
-	void Start() {
-		
-	}
+	void Start() {}
+ 
+    void Update() {}
 
 	// Texturing
 	public void RunTexturing() {
@@ -76,9 +75,4 @@ public abstract class Vegetation: MonoBehaviour {
 	public abstract void AddTrees(int width, int height, float[,] heightMap, Terrain terrain);
 	public abstract void RemoveTrees(TerrainData terrainData);
 	public abstract void AddRocks(int width, int height, float[,] heightMap, Terrain terrain);
-
-	// Update is called once per frame
-	void Update() {
-	
-	}
 }
