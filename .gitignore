@@ -7,6 +7,8 @@
 [Ll]ibrary/
 sysinfo.txt
 *.stackdump
+
+Assets/Meshes.meta
  
 # ===================================== #
 # Visual Studio / MonoDevelop generated #

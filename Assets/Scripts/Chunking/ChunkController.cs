@@ -58,8 +58,6 @@ public class ChunkController : MonoBehaviour {
 		}
 
 		float scale = 1 / (max - min);
-		print(max);
-		print(min);
 
 		for (int z = 0; z < height; z++) {
 			for (int x = 0; x < width; x++) {
