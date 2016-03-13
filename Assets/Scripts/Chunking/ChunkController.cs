@@ -23,6 +23,7 @@ public class ChunkController : MonoBehaviour {
 	public float[] noiseWeights = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
 
 	public Texture2D texture;
+	public Texture2D normal;
 
 	private Hashtable chunks;
 	private int chunkResolution;
@@ -116,6 +117,8 @@ public class ChunkController : MonoBehaviour {
 
 		splats[0] = new SplatPrototype();
 		splats[0].texture = texture;
+		splats[0].normalMap = normal;
+		splats[0].tileSize = new Vector2(5, 5);
 
 		tData.splatPrototypes = splats;
 	}
