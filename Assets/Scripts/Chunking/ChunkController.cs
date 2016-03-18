@@ -53,6 +53,8 @@ public class ChunkController : MonoBehaviour {
 
 		chunks = new Hashtable();
 		heightmapQueue = Queue.Synchronized(new Queue());
+
+		ensureChunk(new ChunkCoord(0, 0), false);
 	}
 
 	float[,] noiseHeightmap(ChunkCoord c, float[,] heightmap) {
@@ -71,11 +73,7 @@ public class ChunkController : MonoBehaviour {
 		return heightmap;
 	}
 
-	IEnumerator GenerateHeightmap(ChunkCoord c) {
-		// This is called on a background thread.  It needs to build the
-		// heightmap array (and possibly some other stuff) and push it onto the
-		// queue when ready.
-
+	void generateHeightmapSync(ChunkCoord c) {
 		float[,] heightmap = new float[chunkResolution, chunkResolution];
 
 		noiseHeightmap(c, heightmap);
@@ -83,6 +81,14 @@ public class ChunkController : MonoBehaviour {
 		// Done, push it into the queue so the main thread can process it into
 		// a terrain object.
 		heightmapQueue.Enqueue(new RenderedHeightmap(c, heightmap));
+	}
+
+	IEnumerator generateHeightmapAsync(ChunkCoord c) {
+		// This is called on a background thread.  It needs to build the
+		// heightmap array (and possibly some other stuff) and push it onto the
+		// queue when ready.
+
+		generateHeightmapSync(c);
 
 		yield return Ninja.JumpToUnity;
 	}
@@ -119,10 +125,14 @@ public class ChunkController : MonoBehaviour {
 		chunks[rh.coord] = tData;
 	}
 
-	void ensureChunk(ChunkCoord c) {
+	void ensureChunk(ChunkCoord c, bool async) {
 		if (!chunks.Contains(c)) {
 			chunks.Add(c, null);
-			this.StartCoroutineAsync(GenerateHeightmap(c));
+			if (async) {
+				this.StartCoroutineAsync(generateHeightmapAsync(c));
+			} else {
+				generateHeightmapSync(c);
+			}
 		}
 	}
 
@@ -194,7 +204,7 @@ public class ChunkController : MonoBehaviour {
 
 		for (int dx = -chunkHorizon; dx <= chunkHorizon; dx++) {
 			for (int dz = -chunkHorizon; dz <= chunkHorizon; dz++) {
-				ensureChunk(new ChunkCoord(cx + dx, cz + dz));
+				ensureChunk(new ChunkCoord(cx + dx, cz + dz), true);
 			}
 		}
 	}
