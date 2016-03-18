@@ -72,10 +72,6 @@ public class ChunkController : MonoBehaviour {
 	}
 
 	IEnumerator GenerateHeightmap(ChunkCoord c) {
-		print("Generating heightmap for coord:");
-		print(c.x);
-		print(c.z);
-
 		// This is called on a background thread.  It needs to build the
 		// heightmap array (and possibly some other stuff) and push it onto the
 		// queue when ready.
@@ -120,7 +116,7 @@ public class ChunkController : MonoBehaviour {
 		stitchTerrain(tData, rh.coord);
 		textureTerrain(tData);
 
-		chunks.Add(rh.coord, tData);
+		chunks[rh.coord] = tData;
 	}
 
 	void ensureChunk(ChunkCoord c) {
