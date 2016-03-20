@@ -1,21 +1,28 @@
 ﻿using UnityEngine;
 using System.Collections;
- 
+
 public class UnderWater : MonoBehaviour {
  
 	//This script enables underwater effects. Attach to player camera.
 
-    public float underwaterLevel = 0;
-	public float deepLevel = 50;
-	private bool isUnderwater;
-	public Color normalColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
+    public Color normalColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
 	public Color deepColor = new Color(0.0f, 0.0f, 0.0f, 0.8f);
 	public Color underwaterColor = new Color(0, 0.4f, 0.7f, 0.1f);
-	private Vector3 above, below, swimUp, sink;
 	public GameObject waterplane = null;
 	public GameObject projector = null;
 
+	private Vector3 above, below, swimUp, sink;
+	private bool isUnderwater;
+	public GameObject chunk;
+
+	private float underwaterLevel = 0.0f;
+	private float calculatedDeepLevel = 0.0f;
+	public float deepLevel = 0.0f;
+
 	void Start() {
+		
+		underwaterLevel = (chunk.GetComponent<ChunkController>().terrainHeight)/2;
+		calculatedDeepLevel = underwaterLevel - deepLevel;
 		projector.transform.position = new Vector3(transform.position.x, underwaterLevel, transform.position.z);
 		above = new Vector3(0.0f, 0.0f, 0.0f);
 		below = new Vector3(180.0f, 0.0f, 0.0f);
@@ -38,7 +45,7 @@ public class UnderWater : MonoBehaviour {
 
 	void SetUnderwater() {
 		float depth = underwaterLevel - transform.position.y;
-		float percentDepth = depth / deepLevel;
+		float percentDepth = depth / calculatedDeepLevel;
 		if (percentDepth > 1.0f) {
 			percentDepth = 1.0f;
 		}
