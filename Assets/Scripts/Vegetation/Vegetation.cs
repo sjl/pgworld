@@ -27,7 +27,7 @@ public abstract class Vegetation: MonoBehaviour {
 		var map = new float[width, height, 5];
 
 		// Assign the new map to the terrainData
-		terrainData.SetAlphamaps(0, 0, Texture(width, height, heightMap, map));
+		terrainData.SetAlphamaps(0, 0, Texture(heightMap, map));
 	}
 
 	// Trees
@@ -71,7 +71,7 @@ public abstract class Vegetation: MonoBehaviour {
 		AddRocks(width, height, heightMap, terrain);
 	}
 
-	public abstract float[,,] Texture(int width, int height, float[,] heightMap, float[,,] map);
+	public abstract float[,,] Texture(float[,] heightMap, float[,,] map);
 	public abstract void AddTrees(int width, int height, float[,] heightMap, Terrain terrain);
 	public abstract void RemoveTrees(TerrainData terrainData);
 	public abstract void AddRocks(int width, int height, float[,] heightMap, Terrain terrain);

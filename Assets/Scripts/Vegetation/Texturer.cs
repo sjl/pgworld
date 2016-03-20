@@ -2,30 +2,27 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class BasicTextureVegetation : Vegetation
+public class Texturer
 {
 	public float slopeValue;
 	public float mountainPeekHeight;
+	public float waterHeight;
 	private int width;
 	private int height;
-	private float[,] heightMap;
-	private float[,,] map;
 	private Terrain terrain;
 	private TerrainData terrainData;
 	private List<TreeInstance> TreeInstances;
 
-	public override float[,,] Texture(float[,] heightMap, float[,,] map) {
+	public float[,,] Texture(float[,] heightMap, float[,,] map) {
 		this.width = heightMap.GetLength(0);
 		this.height = heightMap.GetLength(1);
-		this.heightMap = heightMap;
-		this.map = map;
 
-		SlopeAndHeightTexture();
+		SlopeAndHeightTexture(heightMap, map);
 
-		return this.map;
+		return map;
 	}
 								
-	private void SlopeAndHeightTexture()
+	private void SlopeAndHeightTexture(float[,] heightMap, float[,,] map)
 	{
 		for (int y = 0; y < height; y++) {
 			for (int x = 0; x < width; x++) {
@@ -38,7 +35,7 @@ public class BasicTextureVegetation : Vegetation
 
 				// Use a full Moore neighborhood.  A Von Neumann is faster but can result
 				// in weird artifacts sometimes.
-				for (int dx = -1; dx <= 1; dx += 1) {
+				/*for (int dx = -1; dx <= 1; dx += 1) {
 					for (int dy = -1; dy <= 1; dy += 1) {
 						int nx = x + dx;
 						int ny = y + dy;
@@ -54,8 +51,14 @@ public class BasicTextureVegetation : Vegetation
 							maxDifference = temp;
 						}
 					}
-				}
+				}*/
 
+				map[y, x, 0] = 0;
+				map[y, x, 1] = 0;
+				map[y, x, 2] = 0;
+				map[y, x, 3] = 1;
+				map[y, x, 4] = 0;
+					/*
 				if (locationHeight < waterHeight) {
 					map[y, x, 0] = 0;
 					map[y, x, 1] = 0;
@@ -96,12 +99,12 @@ public class BasicTextureVegetation : Vegetation
 					map[y, x, 2] = locationHeight;
 					map[y, x, 3] = 0;
 					map[y, x, 4] = 0;
-				}
+				}*/
 			}
 		}
 	}
-
-	public override void AddTrees(int width, int height, float[,] heightMap, Terrain terrain) {
+	/*
+	public void AddTrees(int width, int height, float[,] heightMap, Terrain terrain) {
 		this.width = width;
 		this.height = height;
 		this.heightMap = heightMap;
@@ -160,7 +163,7 @@ public class BasicTextureVegetation : Vegetation
 		}
 	}
 
-	public override void RemoveTrees(TerrainData terrainData) {
+	public void RemoveTrees(TerrainData terrainData) {
 		this.terrainData = terrainData;
 
 		RemoveTrees();
@@ -177,9 +180,9 @@ public class BasicTextureVegetation : Vegetation
 		// Now refresh the terrain, getting rid of the darn collider
         float[,] heights = terrainData.GetHeights(0, 0, 0, 0);
         terrainData.SetHeights(0, 0, heights);
-	}
-
-	public override void AddRocks (int width, int height, float[,] heightMap, Terrain terrain) {
+	}*/
+	/*
+	public void AddRocks (int width, int height, float[,] heightMap, Terrain terrain) {
 		this.width = width;
 		this.height = height;
 		this.heightMap = heightMap;
@@ -240,7 +243,7 @@ public class BasicTextureVegetation : Vegetation
 					//rock2.transform.position = pos;
 				}
 			}
-		}
+		}*/
 		/*
 		var rocksToSpawn = 2;
 		for (int i = 0; i < rocksToSpawn; i++) {
@@ -248,7 +251,6 @@ public class BasicTextureVegetation : Vegetation
              Vector3 randSpawn = new Vector3(Random.Range(200, 2000), height, Random.Range(200, 2000));
              Instantiate(rock1, randSpawn, Quaternion.AngleAxis(Random.Range(-180.0f, 180.0f), transform.right));
              rock1.transform.position = new Vector3(rock1.transform.position.x, height, rock1.transform.position.z);
-        }*/
-	}
+        }
+	}*/
 }
-

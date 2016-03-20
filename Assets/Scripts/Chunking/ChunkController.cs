@@ -15,9 +15,11 @@ struct ChunkCoord {
 struct RenderedHeightmap {
 	public readonly ChunkCoord coord;
 	public readonly float[,] heightmap;
-	public RenderedHeightmap(ChunkCoord c, float[,] h) {
+	public readonly float[,,] splatmap;
+	public RenderedHeightmap(ChunkCoord c, float[,] h, float[,,] sm) {
 		coord = c;
 		heightmap = h;
+		splatmap = sm;
 	}
 }
 
@@ -31,9 +33,12 @@ public class ChunkController : MonoBehaviour {
 	public float noiseBaseOctave = 0.25f;
 	public float[] noiseWeights = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
 
-	public Texture2D texture;
-	public Texture2D normal;
-
+	public Texture2D[] diffuses;
+	public Texture2D[] normals;
+	private SplatPrototype[] splats;
+	public float slopeValue;
+	public float mountainPeekHeight;
+	public float waterHeight;
 
 	public int reverseErosionIterations = 10;
 	public float reverseErosionTalus = 0.001f;
@@ -54,6 +59,7 @@ public class ChunkController : MonoBehaviour {
 	private PerlinNoise noise;
 	private ThermalTerrainErosion reverseThermalEroder;
 	private ThermalTerrainErosion thermalEroder;
+	private Texturer texturer;
 
 	void Start () {
 		noise = new PerlinNoise();
@@ -79,6 +85,19 @@ public class ChunkController : MonoBehaviour {
 		thermalEroder.strength = this.thermalErosionStrength;
 		thermalEroder.reverse = false;
 		thermalEroder.iterations = this.thermalErosionIterations;
+
+		texturer = new Texturer();
+		texturer.slopeValue = slopeValue;
+		texturer.mountainPeekHeight = mountainPeekHeight;
+		texturer.waterHeight = waterHeight;
+		splats = new SplatPrototype[diffuses.Length];
+
+		for (var i = 0; i < diffuses.Length; i++) {
+			splats[i] = new SplatPrototype();
+			splats[i].texture = diffuses[i];
+			splats[i].normalMap = normals[i];
+			splats[i].tileSize = new Vector2(5, 5);
+		}
 
 		ensureChunk(new ChunkCoord(0, 0), false);
 	}
@@ -107,10 +126,11 @@ public class ChunkController : MonoBehaviour {
 
 		noiseHeightmap(c, heightmap);
 		erodeHeightmap(c, heightmap);
+		var splatmap = textureHeightmap(heightmap);
 
 		// Done, push it into the queue so the main thread can process it into
 		// a terrain object.
-		heightmapQueue.Enqueue(new RenderedHeightmap(c, heightmap));
+		heightmapQueue.Enqueue(new RenderedHeightmap(c, heightmap, splatmap));
 	}
 
 	IEnumerator generateHeightmapAsync(ChunkCoord c) {
@@ -146,6 +166,9 @@ public class ChunkController : MonoBehaviour {
 		tData.heightmapResolution = chunkResolution;
 		tData.size = new Vector3(chunkWidth, terrainHeight, chunkWidth);
 
+		tData.splatPrototypes = splats;
+    	tData.RefreshPrototypes();
+
 		/* Create and position the terrain */
 		GameObject terrain = Terrain.CreateTerrainGameObject(tData);
 		terrain.transform.position = new Vector3(
@@ -157,9 +180,11 @@ public class ChunkController : MonoBehaviour {
 		tData.SetHeights(0, 0, rh.heightmap);
 
 		stitchTerrain(tData, rh.coord);
-		textureTerrain(tData);
 
 		chunks[rh.coord] = tData;
+
+		// texturing
+		tData.SetAlphamaps(0, 0, rh.splatmap);
 	}
 
 	void ensureChunk(ChunkCoord c, bool async) {
@@ -219,15 +244,15 @@ public class ChunkController : MonoBehaviour {
 		}
 	}
 
-	void textureTerrain(TerrainData tData) {
-		SplatPrototype[] splats = new SplatPrototype[1];
+	float[,,] textureHeightmap(float[,] heightmap) {
+		// determain the mix of textures 1, 2, 3 and 4 to use
+		var splatmap = new float[heightmap.GetLength(0), heightmap.GetLength(1), diffuses.Length];
 
-		splats[0] = new SplatPrototype();
-		splats[0].texture = texture;
-		splats[0].normalMap = normal;
-		splats[0].tileSize = new Vector2(5, 5);
+		splatmap = texturer.Texture(heightmap, splatmap);
+		print(splatmap);
 
-		tData.splatPrototypes = splats;
+		return splatmap;
+		// tData.splatPrototypes = splats;
 	}
 
 	void Update () {
