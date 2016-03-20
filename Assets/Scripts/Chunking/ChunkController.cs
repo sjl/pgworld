@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System;
 using System.Collections;
+using CielaSpike;
 
 struct ChunkCoord {
   public readonly int x;
@@ -11,8 +12,16 @@ struct ChunkCoord {
   }
 }
 
-public class ChunkController : MonoBehaviour {
+struct RenderedHeightmap {
+	public readonly ChunkCoord coord;
+	public readonly float[,] heightmap;
+	public RenderedHeightmap(ChunkCoord c, float[,] h) {
+		coord = c;
+		heightmap = h;
+	}
+}
 
+public class ChunkController : MonoBehaviour {
 	public GameObject player;
 	public int chunkExponent = 6;
 	public int chunkHorizon = 3;
@@ -25,11 +34,26 @@ public class ChunkController : MonoBehaviour {
 	public Texture2D texture;
 	public Texture2D normal;
 
+
+	public int reverseErosionIterations = 10;
+	public float reverseErosionTalus = 0.001f;
+	public float reverseErosionStrength = 1.0f;
+	public float reverseErosionReverseTalusCutoff = 0.0001f;
+
+	public int thermalErosionIterations = 10;
+	public float thermalErosionTalus = 0.001f;
+	public float thermalErosionStrength = 1.0f;
+
+
 	private Hashtable chunks;
+	private Queue heightmapQueue;
+
 	private int chunkResolution;
 	private float chunkWidth;
 
 	private PerlinNoise noise;
+	private ThermalTerrainErosion reverseThermalEroder;
+	private ThermalTerrainErosion thermalEroder;
 
 	void Start () {
 		noise = new PerlinNoise();
@@ -37,14 +61,115 @@ public class ChunkController : MonoBehaviour {
 		noise.weights = noiseWeights;
 		noise.Init();
 
-		chunks = new Hashtable();
 		chunkResolution = (int)Math.Pow(2, chunkExponent) + 1;
 		chunkWidth = chunkResolution * chunkScale;
+
+		chunks = new Hashtable();
+		heightmapQueue = Queue.Synchronized(new Queue());
+
+		reverseThermalEroder = new ThermalTerrainErosion();
+		reverseThermalEroder.talus = this.reverseErosionTalus;
+		reverseThermalEroder.strength = this.reverseErosionStrength;
+		reverseThermalEroder.reverse = true;
+		reverseThermalEroder.reverseTalusCutoff = this.reverseErosionReverseTalusCutoff ;
+		reverseThermalEroder.iterations = this.reverseErosionIterations;
+
+		thermalEroder = new ThermalTerrainErosion();
+		thermalEroder.talus = this.thermalErosionTalus;
+		thermalEroder.strength = this.thermalErosionStrength;
+		thermalEroder.reverse = false;
+		thermalEroder.iterations = this.thermalErosionIterations;
+
+		ensureChunk(new ChunkCoord(0, 0), false);
 	}
 
-	void ensureChunk(ChunkCoord c) {
+	void noiseHeightmap(ChunkCoord c, float[,] heightmap) {
+		int ox = c.x * chunkResolution - c.x;
+		int oz = c.z * chunkResolution - c.z;
+
+		int width = chunkResolution;
+		int height = chunkResolution;
+
+		for (int z = 0; z < height; z++) {
+			for (int x = 0; x < width; x++) {
+				heightmap[z, x] = noise.Get(ox + x, oz + z);
+			}
+		}
+	}
+
+	void erodeHeightmap(ChunkCoord c, float[,] heightmap) {
+		reverseThermalEroder.Erode(heightmap);
+		thermalEroder.Erode(heightmap);
+	}
+
+	void generateHeightmapSync(ChunkCoord c) {
+		float[,] heightmap = new float[chunkResolution, chunkResolution];
+
+		noiseHeightmap(c, heightmap);
+		erodeHeightmap(c, heightmap);
+
+		// Done, push it into the queue so the main thread can process it into
+		// a terrain object.
+		heightmapQueue.Enqueue(new RenderedHeightmap(c, heightmap));
+	}
+
+	IEnumerator generateHeightmapAsync(ChunkCoord c) {
+		// This is called on a background thread.  It needs to build the
+		// heightmap array (and possibly some other stuff) and push it onto the
+		// queue when ready.
+
+		generateHeightmapSync(c);
+
+		yield return Ninja.JumpToUnity;
+	}
+
+	void drainHeightmapQueue(bool fully) {
+		// Called on the main thread to drain finished heightmaps from the
+		// heightmap queue.
+		//
+		// Tread carefully, here be concurrency.
+		if (fully) {
+			while (heightmapQueue.Count > 0) {
+				finalizeHeightmap((RenderedHeightmap)heightmapQueue.Dequeue());
+			}
+		} else {
+			if (heightmapQueue.Count > 0) {
+				finalizeHeightmap((RenderedHeightmap)heightmapQueue.Dequeue());
+			}
+		}
+
+	}
+
+	void finalizeHeightmap(RenderedHeightmap rh) {
+		TerrainData tData = new TerrainData();
+
+		tData.heightmapResolution = chunkResolution;
+		tData.size = new Vector3(chunkWidth, terrainHeight, chunkWidth);
+
+		/* Create and position the terrain */
+		GameObject terrain = Terrain.CreateTerrainGameObject(tData);
+		terrain.transform.position = new Vector3(
+				chunkWidth * rh.coord.x,
+				0.0f,
+				chunkWidth * rh.coord.z);
+
+		/* Set the heightmap data from the background thread. */
+		tData.SetHeights(0, 0, rh.heightmap);
+
+		stitchTerrain(tData, rh.coord);
+		textureTerrain(tData);
+
+		chunks[rh.coord] = tData;
+	}
+
+	void ensureChunk(ChunkCoord c, bool async) {
 		if (!chunks.Contains(c)) {
-			chunks.Add(c, makeChunk(c));
+			chunks.Add(c, null);
+			if (async) {
+				this.StartCoroutineAsync(generateHeightmapAsync(c));
+			} else {
+				generateHeightmapSync(c);
+			}
 		}
 	}
 
@@ -94,24 +219,6 @@ public class ChunkController : MonoBehaviour {
 		}
 	}
 
-	void noiseTerrain(TerrainData tData, ChunkCoord c) {
-		int ox = c.x * chunkResolution - c.x;
-		int oz = c.z * chunkResolution - c.z;
-
-		int width = tData.heightmapWidth;
-		int height = tData.heightmapHeight;
-
-		float[,] heightmap = new float[height, width];
-		for (int z = 0; z < height; z++) {
-			for (int x = 0; x < width; x++) {
-				heightmap[z, x] = noise.Get(ox + x, oz + z);
-			}
-		}
-
-		/* NormalizeHeightmap(heightmap, width, height); */
-		tData.SetHeights(0, 0, heightmap);
-	}
-
 	void textureTerrain(TerrainData tData) {
 		SplatPrototype[] splats = new SplatPrototype[1];
 
@@ -123,37 +230,26 @@ public class ChunkController : MonoBehaviour {
 		tData.splatPrototypes = splats;
 	}
 
-	TerrainData makeChunk(ChunkCoord c) {
-		TerrainData tData = new TerrainData();
-
-		tData.heightmapResolution = chunkResolution;
-		tData.size = new Vector3(chunkWidth, terrainHeight, chunkWidth);
-
-		/* Create and position the terrain */
-		GameObject terrain = Terrain.CreateTerrainGameObject(tData);
-		terrain.transform.position = new Vector3(
-				chunkWidth * c.x,
-				0.0f,
-				chunkWidth * c.z);
-
-		noiseTerrain(tData, c);
-		stitchTerrain(tData, c);
-		textureTerrain(tData);
-
-		return tData;
-	}
-
 	void Update () {
+		drainHeightmapQueue(false);
+
 		float px = player.transform.position.x;
 		float pz = player.transform.position.z;
 
 		int cx = (int) (px / chunkWidth);
 		int cz = (int) (pz / chunkWidth);
 
-		for (int dx = -chunkHorizon; dx <= chunkHorizon; dx++) {
-			for (int dz = -chunkHorizon; dz <= chunkHorizon; dz++) {
-				ensureChunk(new ChunkCoord(cx + dx, cz + dz));
+		for (int row = 0; row <= chunkHorizon; row++) {
+			int stripWidth = chunkHorizon - row;
+			for (int dx = -stripWidth; dx <= stripWidth; dx++) {
+				ensureChunk(new ChunkCoord(cx + dx, cz + row), true);
+				ensureChunk(new ChunkCoord(cx + dx, cz - row), true);
 			}
 		}
+		// for (int dx = -chunkHorizon; dx <= chunkHorizon; dx++) {
+		// 	for (int dz = -chunkHorizon; dz <= chunkHorizon; dz++) {
+		// 		ensureChunk(new ChunkCoord(cx + dx, cz + dz), true);
+		// 	}
+		// }
 	}
 }

@@ -1,18 +1,16 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class ThermalTerrainErosion : TerrainErosion {
+public class ThermalTerrainErosion {
 	public float talus = 0.01f;
 	public float strength = 0.2f;
 	public bool reverse = false;
 	public float reverseTalusCutoff = 0.003f;
 	public int iterations = 1;
 
-	private float[,] heightmap;
 	private int width, height;
 
-	void ErodeHeightmap() {
-
+	void ErodeHeightmap(float[,] heightmap) {
 		// perform a single thermal erosion of the heightmap.
 		for (int zcoord = 0; zcoord < height; zcoord++) {
 			for (int xcoord = 0; xcoord < width; xcoord++) {
@@ -61,15 +59,12 @@ public class ThermalTerrainErosion : TerrainErosion {
 		}
 	}
 
-	public override float[,] Erode(float[,] heightmap, int width, int height) {
-		this.heightmap = heightmap;
-		this.width = width;
-		this.height = height;
+	public void Erode(float[,] heightmap) {
+		this.width = heightmap.GetLength(0);
+		this.height = heightmap.GetLength(1);
 
-		for (int i = 0; i < iterations; i++) {
-			ErodeHeightmap();
+		for (int i = 0; i < this.iterations; i++) {
+			ErodeHeightmap(heightmap);
 		}
-
-		return this.heightmap;
 	}
 }
