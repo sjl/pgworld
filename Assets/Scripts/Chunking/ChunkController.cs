@@ -25,11 +25,14 @@ public class ChunkController : MonoBehaviour {
 	public GameObject player;
 	public int chunkExponent = 6;
 	public int chunkHorizon = 3;
+	public int fringeSize = 1;
 	public float chunkScale = 1;
 	public float terrainHeight = 20.0f;
 
 	public float noiseBaseOctave = 0.25f;
-	public float[] noiseWeights = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
+	public float[] noiseWeights = {
+		1.0f, 1.0f, 1.0f, 1.0f, 1.0f
+	};
 
 	public Texture2D texture;
 	public Texture2D normal;
@@ -84,11 +87,11 @@ public class ChunkController : MonoBehaviour {
 	}
 
 	void noiseHeightmap(ChunkCoord c, float[,] heightmap) {
-		int ox = c.x * chunkResolution - c.x;
-		int oz = c.z * chunkResolution - c.z;
+		int ox = c.x * chunkResolution - c.x - fringeSize;
+		int oz = c.z * chunkResolution - c.z - fringeSize;
 
-		int width = chunkResolution;
-		int height = chunkResolution;
+		int width = heightmap.GetLength(0);
+		int height = heightmap.GetLength(1);
 
 		for (int z = 0; z < height; z++) {
 			for (int x = 0; x < width; x++) {
@@ -103,7 +106,8 @@ public class ChunkController : MonoBehaviour {
 	}
 
 	void generateHeightmapSync(ChunkCoord c) {
-		float[,] heightmap = new float[chunkResolution, chunkResolution];
+		int heightmapResolution = chunkResolution + (2 * fringeSize);
+		float[,] heightmap = new float[heightmapResolution, heightmapResolution];
 
 		noiseHeightmap(c, heightmap);
 		erodeHeightmap(c, heightmap);
@@ -154,12 +158,25 @@ public class ChunkController : MonoBehaviour {
 				chunkWidth * rh.coord.z);
 
 		/* Set the heightmap data from the background thread. */
-		tData.SetHeights(0, 0, rh.heightmap);
+		float[,] heightmap = extractChunk(rh.heightmap);
+		tData.SetHeights(0, 0, heightmap);
 
 		stitchTerrain(tData, rh.coord);
 		textureTerrain(tData);
 
 		chunks[rh.coord] = tData;
+	}
+
+	private float[,] extractChunk(float[,] heightmap) {
+		// Extract the central chunk heights from the full heightmap (which
+		// includes the fringe).
+		float[,] chunk = new float[chunkResolution, chunkResolution];
+		for (int x = 0; x < chunkResolution; x++) {
+			for (int z = 0; z < chunkResolution; z++) {
+				chunk[x, z] = heightmap[(x + fringeSize), (z + fringeSize)];
+			}
+		}
+		return chunk;
 	}
 
 	void ensureChunk(ChunkCoord c, bool async) {
@@ -169,28 +186,6 @@ public class ChunkController : MonoBehaviour {
 				this.StartCoroutineAsync(generateHeightmapAsync(c));
 			} else {
 				generateHeightmapSync(c);
-			}
-		}
-	}
-
-	private void NormalizeHeightmap(float[,] heightmap, int width, int height) {
-		float y;
-		float min = float.MaxValue, max = float.MinValue;
-
-		for (int z = 0; z < height; z++) {
-			for (int x = 0; x < width; x++) {
-				y = heightmap[z, x];
-				if (y > max) max = y;
-				if (y < min) min = y;
-			}
-		}
-
-		float scale = 1 / (max - min);
-
-		for (int z = 0; z < height; z++) {
-			for (int x = 0; x < width; x++) {
-				y = heightmap[z, x];
-				heightmap[z, x] = (y - min) * scale;
 			}
 		}
 	}
