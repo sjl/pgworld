@@ -35,7 +35,7 @@ public class Texturer
 
 				// Use a full Moore neighborhood.  A Von Neumann is faster but can result
 				// in weird artifacts sometimes.
-				/*for (int dx = -1; dx <= 1; dx += 1) {
+				for (int dx = -1; dx <= 1; dx += 1) {
 					for (int dy = -1; dy <= 1; dy += 1) {
 						int nx = x + dx;
 						int ny = y + dy;
@@ -51,14 +51,8 @@ public class Texturer
 							maxDifference = temp;
 						}
 					}
-				}*/
-
-				map[y, x, 0] = 0;
-				map[y, x, 1] = 0;
-				map[y, x, 2] = 0;
-				map[y, x, 3] = 1;
-				map[y, x, 4] = 0;
-					/*
+				}
+					
 				if (locationHeight < waterHeight) {
 					map[y, x, 0] = 0;
 					map[y, x, 1] = 0;
@@ -99,7 +93,7 @@ public class Texturer
 					map[y, x, 2] = locationHeight;
 					map[y, x, 3] = 0;
 					map[y, x, 4] = 0;
-				}*/
+				}
 			}
 		}
 	}

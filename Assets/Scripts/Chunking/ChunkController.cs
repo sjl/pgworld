@@ -168,6 +168,7 @@ public class ChunkController : MonoBehaviour {
 		TerrainData tData = new TerrainData();
 
 		tData.heightmapResolution = chunkResolution;
+		tData.alphamapResolution = chunkResolution;
 		tData.size = new Vector3(chunkWidth, terrainHeight, chunkWidth);
 
 		tData.splatPrototypes = splats;
@@ -244,7 +245,6 @@ public class ChunkController : MonoBehaviour {
 		var splatmap = new float[heightmap.GetLength(0), heightmap.GetLength(1), diffuses.Length];
 
 		splatmap = texturer.Texture(heightmap, splatmap);
-		print(splatmap);
 
 		return splatmap;
 		// tData.splatPrototypes = splats;
