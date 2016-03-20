@@ -34,6 +34,17 @@ public class ChunkController : MonoBehaviour {
 	public Texture2D texture;
 	public Texture2D normal;
 
+
+	public int reverseErosionIterations = 10;
+	public float reverseErosionTalus = 0.001f;
+	public float reverseErosionStrength = 1.0f;
+	public float reverseErosionReverseTalusCutoff = 0.0001f;
+
+	public int thermalErosionIterations = 10;
+	public float thermalErosionTalus = 0.001f;
+	public float thermalErosionStrength = 1.0f;
+
+
 	private Hashtable chunks;
 	private Queue heightmapQueue;
 
@@ -41,6 +52,8 @@ public class ChunkController : MonoBehaviour {
 	private float chunkWidth;
 
 	private PerlinNoise noise;
+	private ThermalTerrainErosion reverseThermalEroder;
+	private ThermalTerrainErosion thermalEroder;
 
 	void Start () {
 		noise = new PerlinNoise();
@@ -54,10 +67,23 @@ public class ChunkController : MonoBehaviour {
 		chunks = new Hashtable();
 		heightmapQueue = Queue.Synchronized(new Queue());
 
+		reverseThermalEroder = new ThermalTerrainErosion();
+		reverseThermalEroder.talus = this.reverseErosionTalus;
+		reverseThermalEroder.strength = this.reverseErosionStrength;
+		reverseThermalEroder.reverse = true;
+		reverseThermalEroder.reverseTalusCutoff = this.reverseErosionReverseTalusCutoff ;
+		reverseThermalEroder.iterations = this.reverseErosionIterations;
+
+		thermalEroder = new ThermalTerrainErosion();
+		thermalEroder.talus = this.thermalErosionTalus;
+		thermalEroder.strength = this.thermalErosionStrength;
+		thermalEroder.reverse = false;
+		thermalEroder.iterations = this.thermalErosionIterations;
+
 		ensureChunk(new ChunkCoord(0, 0), false);
 	}
 
-	float[,] noiseHeightmap(ChunkCoord c, float[,] heightmap) {
+	void noiseHeightmap(ChunkCoord c, float[,] heightmap) {
 		int ox = c.x * chunkResolution - c.x;
 		int oz = c.z * chunkResolution - c.z;
 
@@ -69,14 +95,18 @@ public class ChunkController : MonoBehaviour {
 				heightmap[z, x] = noise.Get(ox + x, oz + z);
 			}
 		}
+	}
 
-		return heightmap;
+	void erodeHeightmap(ChunkCoord c, float[,] heightmap) {
+		reverseThermalEroder.Erode(heightmap);
+		thermalEroder.Erode(heightmap);
 	}
 
 	void generateHeightmapSync(ChunkCoord c) {
 		float[,] heightmap = new float[chunkResolution, chunkResolution];
 
 		noiseHeightmap(c, heightmap);
+		erodeHeightmap(c, heightmap);
 
 		// Done, push it into the queue so the main thread can process it into
 		// a terrain object.
@@ -93,14 +123,21 @@ public class ChunkController : MonoBehaviour {
 		yield return Ninja.JumpToUnity;
 	}
 
-	void drainHeightmapQueue() {
-		// Called on the main thread to drain one item per frame from the
+	void drainHeightmapQueue(bool fully) {
+		// Called on the main thread to drain finished heightmaps from the
 		// heightmap queue.
 		//
 		// Tread carefully, here be concurrency.
-		if (heightmapQueue.Count > 0) {
-			finalizeHeightmap((RenderedHeightmap)heightmapQueue.Dequeue());
+		if (fully) {
+			while (heightmapQueue.Count > 0) {
+				finalizeHeightmap((RenderedHeightmap)heightmapQueue.Dequeue());
+			}
+		} else {
+			if (heightmapQueue.Count > 0) {
+				finalizeHeightmap((RenderedHeightmap)heightmapQueue.Dequeue());
+			}
 		}
+
 	}
 
 	void finalizeHeightmap(RenderedHeightmap rh) {
@@ -194,7 +231,7 @@ public class ChunkController : MonoBehaviour {
 	}
 
 	void Update () {
-		drainHeightmapQueue();
+		drainHeightmapQueue(false);
 
 		float px = player.transform.position.x;
 		float pz = player.transform.position.z;
@@ -202,10 +239,17 @@ public class ChunkController : MonoBehaviour {
 		int cx = (int) (px / chunkWidth);
 		int cz = (int) (pz / chunkWidth);
 
-		for (int dx = -chunkHorizon; dx <= chunkHorizon; dx++) {
-			for (int dz = -chunkHorizon; dz <= chunkHorizon; dz++) {
-				ensureChunk(new ChunkCoord(cx + dx, cz + dz), true);
+		for (int row = 0; row <= chunkHorizon; row++) {
+			int stripWidth = chunkHorizon - row;
+			for (int dx = -stripWidth; dx <= stripWidth; dx++) {
+				ensureChunk(new ChunkCoord(cx + dx, cz + row), true);
+				ensureChunk(new ChunkCoord(cx + dx, cz - row), true);
 			}
 		}
+		// for (int dx = -chunkHorizon; dx <= chunkHorizon; dx++) {
+		// 	for (int dz = -chunkHorizon; dz <= chunkHorizon; dz++) {
+		// 		ensureChunk(new ChunkCoord(cx + dx, cz + dz), true);
+		// 	}
+		// }
 	}
 }
