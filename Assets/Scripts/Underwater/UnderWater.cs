@@ -21,7 +21,7 @@ public class UnderWater : MonoBehaviour {
 
 	void Start() {
 		
-		underwaterLevel = (chunk.GetComponent<ChunkController>().terrainHeight)/2;
+		underwaterLevel = (chunk.GetComponent<ChunkController>().terrainHeight)*(chunk.GetComponent<ChunkController>().waterHeight);
 		calculatedDeepLevel = underwaterLevel - deepLevel;
 		projector.transform.position = new Vector3(transform.position.x, underwaterLevel, transform.position.z);
 		above = new Vector3(0.0f, 0.0f, 0.0f);
