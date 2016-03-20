@@ -124,12 +124,25 @@ public class ChunkController : MonoBehaviour {
 		thermalEroder.Erode(heightmap);
 	}
 
+	float[,,] textureHeightmap(float[,] heightmap) {
+		// determain the mix of textures 1, 2, 3 and 4 to use
+		var splatmap = new float[heightmap.GetLength(0), heightmap.GetLength(1), diffuses.Length];
+
+		splatmap = texturer.Texture(heightmap, splatmap);
+
+		return splatmap;
+		// tData.splatPrototypes = splats;
+	}
+
 	void generateHeightmapSync(ChunkCoord c) {
 		int heightmapResolution = chunkResolution + (2 * fringeSize);
 		float[,] heightmap = new float[heightmapResolution, heightmapResolution];
 
 		noiseHeightmap(c, heightmap);
 		erodeHeightmap(c, heightmap);
+
+		heightmap = extractChunk(heightmap);
+
 		var splatmap = textureHeightmap(heightmap);
 
 		// Done, push it into the queue so the main thread can process it into
@@ -182,8 +195,7 @@ public class ChunkController : MonoBehaviour {
 				chunkWidth * rh.coord.z);
 
 		/* Set the heightmap data from the background thread. */
-		float[,] heightmap = extractChunk(rh.heightmap);
-		tData.SetHeights(0, 0, heightmap);
+		tData.SetHeights(0, 0, rh.heightmap);
 
 		stitchTerrain(tData, rh.coord);
 
@@ -238,16 +250,6 @@ public class ChunkController : MonoBehaviour {
 			var seam = bottom.GetHeights(0, 0, chunkResolution, 1);
 			tData.SetHeights(0, chunkResolution - 1, seam);
 		}
-	}
-
-	float[,,] textureHeightmap(float[,] heightmap) {
-		// determain the mix of textures 1, 2, 3 and 4 to use
-		var splatmap = new float[heightmap.GetLength(0), heightmap.GetLength(1), diffuses.Length];
-
-		splatmap = texturer.Texture(heightmap, splatmap);
-
-		return splatmap;
-		// tData.splatPrototypes = splats;
 	}
 
 	void Update () {
