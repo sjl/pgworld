@@ -1,0 +1,10 @@
+fileFormatVersion: 2
+guid: ebe90bdbfc153dd449fbd514428435e0
+timeCreated: 1455270426
+licenseType: Store
+ShaderImporter:
+  defaultTextures:
+  - _Mushroom: {fileID: 2800000, guid: 9a7d924352030f6499cf318afee54125, type: 3}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

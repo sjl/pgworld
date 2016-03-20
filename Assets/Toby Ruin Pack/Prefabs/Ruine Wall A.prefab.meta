@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b3367233293091f4184c69e4d570ae0b
+labels:
+- Wall
+- Rock
+- Ruin
+- Stone
+- Prop
+- Architecture
+timeCreated: 1426182433
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
