@@ -1,17 +1,31 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class HydraulicTerrainErosion : TerrainErosion {
+public class HydraulicTerrainErosion {
+	// How much rain to add each turn.
 	public float rainfallAmount = 0.01f; // kr
+
+	// Percentage of rain that evaporates every turn.
 	public float evaporationRatio = 0.5f; // ke
+
+	// Amount of soil that can be carried with water.
 	public float sedimentCapacity = 0.01f; // kc
+
+	// How easily soil get dissolved in water.
 	public float soilSolubility = 0.01f; // ks
+
+	// Height above which rain starts to taper off.
 	public float rainAltitude = 0.4f;
+
+	// How fast rain tapers off above the cutoff.
 	public float rainFalloff = 1.0f;
 
 	public int iterations = 1;
 
-	public override float[,] Erode(float[,] heightmap, int width, int height) {
+	public void Erode(float[,] heightmap) {
+		var width = heightmap.GetLength(0);
+		var height = heightmap.GetLength(1);
+
 		float[,] currentHeight = (float[,])heightmap.Clone();
 		float[,] nextHeight = new float[height, width];
 		float[,] currentWater = new float[height, width];
@@ -33,7 +47,8 @@ public class HydraulicTerrainErosion : TerrainErosion {
 					if (h < rainAltitude) {
 						rainRatio = 1.0f;
 					} else {
-						rainRatio = Mathf.Lerp(1.0f, 0.0f, (h - rainAltitude) / rainAltitude);
+						rainRatio = Mathf.Lerp(1.0f, 0.0f,
+								((h - rainAltitude) / (1.0f - rainAltitude)));
 					}
 
 					// add rain
@@ -167,6 +182,6 @@ public class HydraulicTerrainErosion : TerrainErosion {
 			}
 		}
 
-		return currentHeight;
+		System.Array.Copy(currentHeight, heightmap, width * height);
 	}
 }

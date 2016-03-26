@@ -52,9 +52,13 @@ public class ChunkController : MonoBehaviour {
 	public float thermalErosionTalus = 0.001f;
 	public float thermalErosionStrength = 1.0f;
 
-
-	private Hashtable chunks;
-	private Queue heightmapQueue;
+	public float hydraulicErosionRainfallAmount = 0.01f; // kr
+	public float hydraulicErosionEvaporationRatio = 0.5f; // ke
+	public float hydraulicErosionSedimentCapacity = 0.01f; // kc
+	public float hydraulicErosionSoilSolubility = 0.01f; // ks
+	public float hydraulicErosionRainAltitude = 0.4f;
+	public float hydraulicErosionRainFalloff = 1.0f;
+	public int hydraulicErosionIterations = 1;
 
 	private int chunkResolution;
 	private float chunkWidth;
@@ -62,7 +66,36 @@ public class ChunkController : MonoBehaviour {
 	private PerlinNoise noise;
 	private ThermalTerrainErosion reverseThermalEroder;
 	private ThermalTerrainErosion thermalEroder;
+	private HydraulicTerrainErosion hydraulicEroder;
 	private Texturer texturer;
+
+	// CHUNKING AND THREADING
+	//
+	// We store which chunks we've added in a hashmap so we can check them
+	// quickly in each frame.
+	//
+	// We don't actually add the chunks during the frame Update().  Instead, we
+	// fire off a background thread to come up with the initial noised, eroded,
+	// textured heightmap.
+	//
+	// Once that thread finishes it shoves the result into a queue, which the
+	// main thread consumes from once per frame.
+	private Hashtable chunks;
+	private Queue heightmapQueue;
+
+	// THREAD LIMITING
+	//
+	// Doing work in the background with threads is all well and good, but we
+	// need to be careful.  If we just spin up 50 background threads they'll
+	// thrash and work against each other and end up slower in the end. Worse
+	// still: they'll compete with the main thread!  So we need to limit the
+	// number of outstanding worker threads at any given time.
+	//
+	// This limit should be set to (roughly) your number of CPU cores, minus
+	// one or two for the main thread and anything else your computer might want
+	// to do besides playing the game.
+	private int outstanding = 0;
+	public int threads = 6;
 
 	void Start () {
 		noise = new PerlinNoise();
@@ -89,6 +122,15 @@ public class ChunkController : MonoBehaviour {
 		thermalEroder.reverse = false;
 		thermalEroder.iterations = this.thermalErosionIterations;
 
+		hydraulicEroder = new HydraulicTerrainErosion();
+		hydraulicEroder.rainfallAmount = hydraulicErosionRainfallAmount; // kr
+		hydraulicEroder.evaporationRatio = hydraulicErosionEvaporationRatio; // ke
+		hydraulicEroder.sedimentCapacity = hydraulicErosionSedimentCapacity; // kc
+		hydraulicEroder.soilSolubility = hydraulicErosionSoilSolubility; // ks
+		hydraulicEroder.rainAltitude = hydraulicErosionRainAltitude;
+		hydraulicEroder.rainFalloff = hydraulicErosionRainFalloff;
+		hydraulicEroder.iterations = hydraulicErosionIterations;
+
 		texturer = new Texturer();
 		texturer.slopeValue = slopeValue;
 		texturer.mountainPeekHeight = mountainPeekHeight;
@@ -103,6 +145,9 @@ public class ChunkController : MonoBehaviour {
 		}
 
 		ensureChunk(new ChunkCoord(0, 0), false);
+		ensureChunk(new ChunkCoord(-1, -1), true);
+		ensureChunk(new ChunkCoord(0, -1), true);
+		ensureChunk(new ChunkCoord(-1, 0), true);
 	}
 
 	void noiseHeightmap(ChunkCoord c, float[,] heightmap) {
@@ -121,6 +166,7 @@ public class ChunkController : MonoBehaviour {
 
 	void erodeHeightmap(ChunkCoord c, float[,] heightmap) {
 		reverseThermalEroder.Erode(heightmap);
+		hydraulicEroder.Erode(heightmap);
 		thermalEroder.Erode(heightmap);
 	}
 
@@ -158,6 +204,11 @@ public class ChunkController : MonoBehaviour {
 		generateHeightmapSync(c);
 
 		yield return Ninja.JumpToUnity;
+
+		print("Outstanding: " + outstanding);
+		outstanding -= 1;
+
+		yield return Ninja.JumpBack;
 	}
 
 	void drainHeightmapQueue(bool fully) {
@@ -218,12 +269,15 @@ public class ChunkController : MonoBehaviour {
 	}
 
 	void ensureChunk(ChunkCoord c, bool async) {
-		if (!chunks.Contains(c)) {
-			chunks.Add(c, null);
-			if (async) {
-				this.StartCoroutineAsync(generateHeightmapAsync(c));
-			} else {
-				generateHeightmapSync(c);
+		if (outstanding < threads) {
+			if (!chunks.Contains(c)) {
+				chunks.Add(c, null);
+				if (async) {
+					outstanding += 1;
+					this.StartCoroutineAsync(generateHeightmapAsync(c));
+				} else {
+					generateHeightmapSync(c);
+				}
 			}
 		}
 	}
