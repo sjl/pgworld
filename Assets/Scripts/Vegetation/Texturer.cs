@@ -45,7 +45,7 @@ public class Texturer
 							continue;
 						}
 
-						var temp = heightMap[y, x] - heightMap[ny, nx];
+						var temp = Mathf.Abs(heightMap[y, x] - heightMap[ny, nx]);
 
 						if (temp > maxDifference) {
 							maxDifference = temp;
