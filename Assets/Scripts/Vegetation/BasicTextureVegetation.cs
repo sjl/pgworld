@@ -224,7 +224,7 @@ public class BasicTextureVegetation : Vegetation
 						}
 					}
 				}
-				var pos = new Vector3((float) x / width, 0.0f, (float) y / height);
+				//var pos = new Vector3((float) x / width, 0.0f, (float) y / height);
 
 				if (locationHeight < waterHeight) {
 					//var rockHeight = terrain.SampleHeight(rock1.transform.position);

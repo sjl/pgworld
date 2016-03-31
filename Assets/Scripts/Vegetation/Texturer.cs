@@ -4,25 +4,26 @@ using System.Collections.Generic;
 
 public class Texturer
 {
-	public float slopeValue;
-	public float mountainPeekHeight;
-	public float waterHeight;
+	public float slopeValue = 0.002f;
+	public float mountainPeekHeight = 0.56f;
+	public float waterHeight = 0.44f;
+	public int treeStrength;
 	private int width;
 	private int height;
 	private Terrain terrain;
 	private TerrainData terrainData;
 	private List<TreeInstance> TreeInstances;
 
-	public float[,,] Texture(float[,] heightMap, float[,,] map) {
+	public float[,,] Texture(float[,] heightMap, float[,,] map, int[,] randomArray) {
 		this.width = heightMap.GetLength(0);
 		this.height = heightMap.GetLength(1);
 
-		SlopeAndHeightTexture(heightMap, map);
+		SlopeAndHeightTexture(heightMap, map, randomArray);
 
 		return map;
 	}
 								
-	private void SlopeAndHeightTexture(float[,] heightMap, float[,,] map)
+	private void SlopeAndHeightTexture(float[,] heightMap, float[,,] map, int[,] randomArray)
 	{
 		for (int y = 0; y < height; y++) {
 			for (int x = 0; x < width; x++) {
@@ -52,14 +53,16 @@ public class Texturer
 						}
 					}
 				}
-					
+
+				var rnd = randomArray[y, x] * 0.000019;
+
 				if (locationHeight < waterHeight) {
 					map[y, x, 0] = 0;
 					map[y, x, 1] = 0;
 					map[y, x, 2] = locationHeight;
 					map[y, x, 3] = 0;
 					map[y, x, 4] = 1 - locationHeight;
-				} else if (locationHeight >= (mountainPeekHeight)){// + Random.Range(0f, 0.4f))) { // mountain tops texturing
+				} else if (locationHeight >= (mountainPeekHeight + rnd)){ // mountain tops texturing
 					var halfDiff = (1 - mountainPeekHeight) / 2;
 					var quarterDiff = halfDiff / 2;
 					if (locationHeight >= (mountainPeekHeight + halfDiff + quarterDiff)) { // highest peek
@@ -97,17 +100,17 @@ public class Texturer
 			}
 		}
 	}
-	/*
-	public void AddTrees(int width, int height, float[,] heightMap, Terrain terrain) {
-		this.width = width;
-		this.height = height;
-		this.heightMap = heightMap;
-		this.terrain = terrain;
 
-		PopulateTreeInstances();
+	public List<TreeInstance> AddTrees(float[,] heightMap, List<TreeInstance> treeInstances, int[,] randomArray) {
+		this.width = heightMap.GetLength(0);
+		this.height = heightMap.GetLength(1);
+
+		PopulateTreeInstances(heightMap, treeInstances, randomArray);
+
+		return treeInstances;
 	}
 
-	private void PopulateTreeInstances()
+	private void PopulateTreeInstances(float[,] heightMap, List<TreeInstance> treeInstances, int[,] randomArray)
 	{
 		for (int y = 0; y < height; y++) {
 			for (int x = 0; x < width; x++) {
@@ -130,7 +133,7 @@ public class Texturer
 							continue;
 						}
 
-						var temp = heightMap [y, x] - heightMap [ny, nx];
+						var temp = Mathf.Abs(heightMap [y, x] - heightMap [ny, nx]);
 
 						if (temp > maxDifference) {
 							maxDifference = temp;
@@ -138,25 +141,30 @@ public class Texturer
 					}
 				}
 
-				if (locationHeight < mountainPeekHeight && maxDifference < slopeValue && locationHeight > waterHeight) { // the slope and height is within limits
-					
-					var rnd = Random.Range(0, (600 + ((int) locationHeight * 100))); // fewer trees as it gets higher
-					if (rnd == 0) {
-						// add random trees	
-						var treeInstance = new TreeInstance();
-						treeInstance.prototypeIndex = Random.Range(0, 3); // mix of three tree prototypes
-						treeInstance.heightScale = Random.Range(0.3f, 1.2f) - (0.3f * locationHeight); // smaller trees where height is more (less o2)
-						treeInstance.widthScale = treeInstance.heightScale;
-						treeInstance.color = Color.white;
-						treeInstance.position = new Vector3((float) x / width, 0.0f, (float) y / height);
+				if (locationHeight < mountainPeekHeight && maxDifference < slopeValue && locationHeight > waterHeight) {
+					int rnd = randomArray[y, x];
+					var rndBasedOnLocation = rnd + (int) locationHeight * 100; 			// random location of trees	
+					rndBasedOnLocation += (int) locationHeight * 100; 					// fewer trees as it gets higher
+					float rndHeight = (rnd * 0.0015f + 0.3f) - (0.3f * locationHeight); // smaller trees where height is extreme (less o2)
+					int rndPrototype = rnd < 200 ? 0 : rnd < 400 ? 1 : 2; 			    // mix of three tree prototypes
 
-						terrain.AddTreeInstance(treeInstance);
+					if (rndBasedOnLocation < treeStrength) {
+						// add random trees	
+						var tI = new TreeInstance();
+						tI.prototypeIndex = rndPrototype;
+						tI.heightScale = rndHeight;
+						tI.widthScale = tI.heightScale;
+						tI.color = Color.white;
+						tI.position = new Vector3((float) x / width, 0.0f, (float) y / height);
+
+						treeInstances.Add(tI);
 					}
 				}
 			}
 		}
 	}
 
+	/*
 	public void RemoveTrees(TerrainData terrainData) {
 		this.terrainData = terrainData;
 

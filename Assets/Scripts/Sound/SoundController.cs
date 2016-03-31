@@ -9,9 +9,9 @@ public class SoundController : MonoBehaviour {
 	public AudioSource wind;
 
 	private PerlinNoise windNoise;
-	public float noiseBaseOctave = 0.000003f;
+	public float noiseBaseOctave = 0.5f;
 	public float[] noiseWeights = {
-		1.0f, 0.01f
+		100.0f, 1.0f
 	};
 	public float windBlendRate = 0.1f;
 
@@ -31,25 +31,25 @@ public class SoundController : MonoBehaviour {
 			* (chunkController.GetComponent<ChunkController>().waterHeight);
 	}
 
-	private float clamp(float value) {
-		if (value < 0.0f) {
-			return 0.0f;
-		} else if (value > 1.0f) {
-			return 1.0f;
+	private float clamp(float value, float min, float max) {
+		if (value < min) {
+			return min;
+		} else if (value > max) {
+			return max;
 		} else {
 			return value;
 		}
 	}
 	
 	private float expand(float value) {
-		return (value - 0.45f) * 10;
+		return (value - 0.40f) * 5;
 	}
 
 	void Update () {
 		float py = player.transform.position.y;
 		float vol = windNoise.Get(Time.fixedTime * windBlendRate, 0.0f);
 
-		float windVolume = clamp(expand(vol));
+		float windVolume = clamp(expand(vol), 0.1f, 1.0f);
 
 		wind.volume = windVolume;
 		windVolumeUI.text = "Wind blend: " + windVolume.ToString();
