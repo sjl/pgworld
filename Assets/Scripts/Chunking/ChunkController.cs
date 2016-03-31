@@ -48,10 +48,6 @@ public class ChunkController : MonoBehaviour {
 	public float reverseErosionStrength = 1.0f;
 	public float reverseErosionReverseTalusCutoff = 0.0001f;
 
-	public int thermalErosionIterations = 10;
-	public float thermalErosionTalus = 0.001f;
-	public float thermalErosionStrength = 1.0f;
-
 	public float hydraulicErosionRainfallAmount = 0.01f; // kr
 	public float hydraulicErosionEvaporationRatio = 0.5f; // ke
 	public float hydraulicErosionSedimentCapacity = 0.01f; // kc
@@ -59,6 +55,10 @@ public class ChunkController : MonoBehaviour {
 	public float hydraulicErosionRainAltitude = 0.4f;
 	public float hydraulicErosionRainFalloff = 1.0f;
 	public int hydraulicErosionIterations = 1;
+
+	public int thermalErosionIterations = 10;
+	public float thermalErosionTalus = 0.001f;
+	public float thermalErosionStrength = 1.0f;
 
 	private int chunkResolution;
 	private float chunkWidth;
@@ -116,12 +116,6 @@ public class ChunkController : MonoBehaviour {
 		reverseThermalEroder.reverseTalusCutoff = this.reverseErosionReverseTalusCutoff ;
 		reverseThermalEroder.iterations = this.reverseErosionIterations;
 
-		thermalEroder = new ThermalTerrainErosion();
-		thermalEroder.talus = this.thermalErosionTalus;
-		thermalEroder.strength = this.thermalErosionStrength;
-		thermalEroder.reverse = false;
-		thermalEroder.iterations = this.thermalErosionIterations;
-
 		hydraulicEroder = new HydraulicTerrainErosion();
 		hydraulicEroder.rainfallAmount = hydraulicErosionRainfallAmount; // kr
 		hydraulicEroder.evaporationRatio = hydraulicErosionEvaporationRatio; // ke
@@ -130,6 +124,12 @@ public class ChunkController : MonoBehaviour {
 		hydraulicEroder.rainAltitude = hydraulicErosionRainAltitude;
 		hydraulicEroder.rainFalloff = hydraulicErosionRainFalloff;
 		hydraulicEroder.iterations = hydraulicErosionIterations;
+
+		thermalEroder = new ThermalTerrainErosion();
+		thermalEroder.talus = this.thermalErosionTalus;
+		thermalEroder.strength = this.thermalErosionStrength;
+		thermalEroder.reverse = false;
+		thermalEroder.iterations = this.thermalErosionIterations;
 
 		texturer = new Texturer();
 		texturer.slopeValue = slopeValue;
