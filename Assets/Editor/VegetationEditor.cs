@@ -31,12 +31,12 @@ public class VegetationEditor : Editor {
 [CustomEditor(typeof(BasicTextureVegetation))]
 public class BasicTextureVegetationEditor : VegetationEditor {}
 
-[CustomEditor(typeof(GrassPlacement))]
-public class GrassPlacementEditor : Editor {
+[CustomEditor(typeof(Grasser))]
+public class GrasserEditor : Editor {
 	public override void OnInspectorGUI () {
 		DrawDefaultInspector();
 		EditorGUILayout.HelpBox("Specify how many textures your script should affect. Then you specify for each texture the grass strength that it will generate (Default: 0 {no grass}).", MessageType.Info);
-		GrassPlacement gr = (GrassPlacement) target;
+		Grasser gr = (Grasser) target;
 		if (GUILayout.Button("Run grass generator")) {
 			gr.RunGrassGenerator();
 		}

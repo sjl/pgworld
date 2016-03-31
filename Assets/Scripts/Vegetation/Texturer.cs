@@ -4,9 +4,9 @@ using System.Collections.Generic;
 
 public class Texturer
 {
-	public float slopeValue;
-	public float mountainPeekHeight;
-	public float waterHeight;
+	public float slopeValue = 0.002f;
+	public float mountainPeekHeight = 0.56f;
+	public float waterHeight = 0.44f;
 	private int width;
 	private int height;
 	private Terrain terrain;
@@ -97,17 +97,17 @@ public class Texturer
 			}
 		}
 	}
-	/*
-	public void AddTrees(int width, int height, float[,] heightMap, Terrain terrain) {
-		this.width = width;
-		this.height = height;
-		this.heightMap = heightMap;
-		this.terrain = terrain;
 
-		PopulateTreeInstances();
+	public List<TreeInstance> AddTrees(float[,] heightMap, List<TreeInstance> treeInstances) {
+		this.width = heightMap.GetLength(0);
+		this.height = heightMap.GetLength(1);
+
+		PopulateTreeInstances(heightMap, treeInstances);
+
+		return treeInstances;
 	}
 
-	private void PopulateTreeInstances()
+	private void PopulateTreeInstances(float[,] heightMap, List<TreeInstance> treeInstances)
 	{
 		for (int y = 0; y < height; y++) {
 			for (int x = 0; x < width; x++) {
@@ -138,25 +138,27 @@ public class Texturer
 					}
 				}
 
-				if (locationHeight < mountainPeekHeight && maxDifference < slopeValue && locationHeight > waterHeight) { // the slope and height is within limits
-					
-					var rnd = Random.Range(0, (600 + ((int) locationHeight * 100))); // fewer trees as it gets higher
-					if (rnd == 0) {
+				//if (locationHeight < mountainPeekHeight && maxDifference < slopeValue && locationHeight > waterHeight) { // the slope and height is within limits
+				if (x == 0) {	
+					//var rnd = Random.Range(0, (600 + ((int) locationHeight * 100))); // fewer trees as it gets higher
+					if (y == 0) {
 						// add random trees	
-						var treeInstance = new TreeInstance();
-						treeInstance.prototypeIndex = Random.Range(0, 3); // mix of three tree prototypes
-						treeInstance.heightScale = Random.Range(0.3f, 1.2f) - (0.3f * locationHeight); // smaller trees where height is more (less o2)
-						treeInstance.widthScale = treeInstance.heightScale;
-						treeInstance.color = Color.white;
-						treeInstance.position = new Vector3((float) x / width, 0.0f, (float) y / height);
+						var tI = new TreeInstance();
+						tI.prototypeIndex = 0;//Random.Range(0, 3); // mix of three tree prototypes
+						tI.heightScale = 1;//Random.Range(0.3f, 1.2f) - (0.3f * locationHeight); // smaller trees where height is more (less o2)
+						tI.widthScale = tI.heightScale;
+						tI.color = Color.white;
+						tI.position = new Vector3((float) x / width, 0.0f, (float) y / height);
 
-						terrain.AddTreeInstance(treeInstance);
+						treeInstances.Add(tI);
+						//terrain.AddTreeInstance(treeInstance);
 					}
 				}
 			}
 		}
 	}
 
+	/*
 	public void RemoveTrees(TerrainData terrainData) {
 		this.terrainData = terrainData;
 

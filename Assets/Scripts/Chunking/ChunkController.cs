@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using CielaSpike;
 
 struct ChunkCoord {
@@ -16,10 +17,12 @@ struct RenderedHeightmap {
 	public readonly ChunkCoord coord;
 	public readonly float[,] heightmap;
 	public readonly float[,,] splatmap;
-	public RenderedHeightmap(ChunkCoord c, float[,] h, float[,,] sm) {
-		coord = c;
-		heightmap = h;
-		splatmap = sm;
+	public readonly List<TreeInstance> treeInstances;
+	public RenderedHeightmap(ChunkCoord c, float[,] h, float[,,] sm, List<TreeInstance> ti) {
+		coord 			= c;
+		heightmap 		= h;
+		splatmap 		= sm;
+		treeInstances 	= ti;
 	}
 }
 
@@ -52,6 +55,13 @@ public class ChunkController : MonoBehaviour {
 	public float thermalErosionTalus = 0.001f;
 	public float thermalErosionStrength = 1.0f;
 
+	public GameObject treePrefab;
+	private TreePrototype[] treeProto;
+
+	private int grassType = 0;
+	public Texture2D grass;
+	private DetailPrototype[] grassProto;
+    public int[] texturesToAffect;
 
 	private Hashtable chunks;
 	private Queue heightmapQueue;
@@ -63,6 +73,7 @@ public class ChunkController : MonoBehaviour {
 	private ThermalTerrainErosion reverseThermalEroder;
 	private ThermalTerrainErosion thermalEroder;
 	private Texturer texturer;
+	private GrassPlacement grassPlacer;
 
 	void Start () {
 		noise = new PerlinNoise();
@@ -95,12 +106,35 @@ public class ChunkController : MonoBehaviour {
 		texturer.waterHeight = waterHeight;
 		splats = new SplatPrototype[diffuses.Length];
 
+		treeProto = new TreePrototype[1];
+		treeProto[0] = new TreePrototype();
+		treeProto[0].bendFactor = 0;
+		treeProto[0].prefab = treePrefab;
+
+		grassPlacer = new GrassPlacement();
+		grassPlacer.grassType = grassType;
+		grassPlacer.texturesToAffect = texturesToAffect;
+
 		for (var i = 0; i < diffuses.Length; i++) {
 			splats[i] = new SplatPrototype();
 			splats[i].texture = diffuses[i];
 			splats[i].normalMap = normals[i];
 			splats[i].tileSize = new Vector2(5, 5);
 		}
+		grassProto = new DetailPrototype[1];
+		grassProto[0] = new DetailPrototype();
+		grassProto[0].prototypeTexture = grass;
+		grassProto[0].bendFactor = 0.1f;
+		grassProto[0].dryColor = new Color(0.804f, 0.737f, 0.102f, 1.000f);
+		grassProto[0].healthyColor = new Color(0.263f, 0.976f, 0.165f, 1.000f);
+		grassProto[0].maxHeight = 0.5f;
+		grassProto[0].minHeight = 0.2f;
+		grassProto[0].maxWidth = 1f;
+		grassProto[0].minWidth = 0.5f;
+		grassProto[0].noiseSpread = 0.1f;
+		grassProto[0].prototype = null;
+		grassProto[0].renderMode = DetailRenderMode.GrassBillboard;
+		grassProto[0].usePrototypeMesh = false;
 
 		ensureChunk(new ChunkCoord(0, 0), false);
 	}
@@ -131,7 +165,20 @@ public class ChunkController : MonoBehaviour {
 		splatmap = texturer.Texture(heightmap, splatmap);
 
 		return splatmap;
-		// tData.splatPrototypes = splats;
+	}
+
+	List<TreeInstance> treePlacement (float[,] heightmap) {
+		var treeInstances = new List<TreeInstance>();
+		treeInstances = texturer.AddTrees(heightmap, treeInstances);
+
+		return treeInstances;
+	}
+
+	int[,] grassPlacement(int detailWidth, float[,,] splatmap) {
+		int[,] newDetailLayer = new int[detailWidth, detailWidth];
+		grassPlacer.RunGrassGenerator(newDetailLayer, splatmap);
+
+		return newDetailLayer;
 	}
 
 	void generateHeightmapSync(ChunkCoord c) {
@@ -145,9 +192,11 @@ public class ChunkController : MonoBehaviour {
 
 		var splatmap = textureHeightmap(heightmap);
 
+		var treeInstances = treePlacement(heightmap);
+
 		// Done, push it into the queue so the main thread can process it into
 		// a terrain object.
-		heightmapQueue.Enqueue(new RenderedHeightmap(c, heightmap, splatmap));
+		heightmapQueue.Enqueue(new RenderedHeightmap(c, heightmap, splatmap, treeInstances));
 	}
 
 	IEnumerator generateHeightmapAsync(ChunkCoord c) {
@@ -177,22 +226,29 @@ public class ChunkController : MonoBehaviour {
 
 	}
 
-	void finalizeHeightmap(RenderedHeightmap rh) {
+	void finalizeHeightmap (RenderedHeightmap rh)
+	{
 		TerrainData tData = new TerrainData();
 
 		tData.heightmapResolution = chunkResolution;
-		tData.alphamapResolution = chunkResolution;
+		tData.alphamapResolution  = chunkResolution;
+		tData.SetDetailResolution(chunkResolution*2, 1);
 		tData.size = new Vector3(chunkWidth, terrainHeight, chunkWidth);
 
-		tData.splatPrototypes = splats;
-    	tData.RefreshPrototypes();
+		tData.splatPrototypes  = splats;
+		tData.detailPrototypes = grassProto;
+		tData.treePrototypes   = treeProto;
+		tData.RefreshPrototypes();
+
+		// tree placement
+		//tData.treeInstances = rh.treeInstances.ToArray();
 
 		/* Create and position the terrain */
 		GameObject terrain = Terrain.CreateTerrainGameObject(tData);
-		terrain.transform.position = new Vector3(
-				chunkWidth * rh.coord.x,
-				0.0f,
-				chunkWidth * rh.coord.z);
+		terrain.transform.position = new Vector3 (
+			chunkWidth * rh.coord.x,
+			0.0f,
+			chunkWidth * rh.coord.z);
 
 		/* Set the heightmap data from the background thread. */
 		tData.SetHeights(0, 0, rh.heightmap);
@@ -203,6 +259,18 @@ public class ChunkController : MonoBehaviour {
 
 		// texturing
 		tData.SetAlphamaps(0, 0, rh.splatmap);
+
+
+
+		//terrain.AddTreeInstances(rh.treeInstances[i]);
+
+		// grass placement
+		/*if (texturesToAffect.Length != 0) {
+			var detailedLayer = grassPlacement (tData.detailResolution, tData.GetAlphamaps (0, 0,
+				                   tData.alphamapWidth, 
+				                   tData.alphamapHeight));
+			tData.SetDetailLayer (0, 0, grassType, detailedLayer);
+		}*/
 	}
 
 	private float[,] extractChunk(float[,] heightmap) {
