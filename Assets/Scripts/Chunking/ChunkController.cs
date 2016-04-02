@@ -65,7 +65,8 @@ public class ChunkController : MonoBehaviour {
 
 	public GameObject[] treePrefab;
 	private TreePrototype[] treeProto;
-	public int treeStrength = 10;
+	public int treeStrength = 5;
+	public float treeHeightFactor = 2.5f;
 
 	private int grassType = 0;
 	public Texture2D grass;
@@ -152,10 +153,11 @@ public class ChunkController : MonoBehaviour {
 		texturer.waterHeight = waterHeight;
 		splats = new SplatPrototype[diffuses.Length];
 
+		texturer.treeHeightFactor = treeHeightFactor;
 		texturer.treeStrength = treeStrength;
 		treeProto = new TreePrototype[treePrefab.Length];
 		for (var i = 0; i < treePrefab.Length; i++) {
-			treeProto[i] = new TreePrototype ();
+			treeProto[i] = new TreePrototype();
 			treeProto[i].bendFactor = 0;
 			treeProto[i].prefab = treePrefab[i];
 		}

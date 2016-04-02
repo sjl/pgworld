@@ -7,6 +7,7 @@ public class Texturer
 	public float slopeValue = 0.002f;
 	public float mountainPeekHeight = 0.56f;
 	public float waterHeight = 0.44f;
+	public float treeHeightFactor;
 	public int treeStrength;
 	private int width;
 	private int height;
@@ -110,13 +111,13 @@ public class Texturer
 		return treeInstances;
 	}
 
-	private void PopulateTreeInstances(float[,] heightMap, List<TreeInstance> treeInstances, int[,] randomArray)
+	private void PopulateTreeInstances (float[,] heightMap, List<TreeInstance> treeInstances, int[,] randomArray)
 	{
 		for (int y = 0; y < height; y++) {
 			for (int x = 0; x < width; x++) {
 
 				// read the height at this location
-				float locationHeight = heightMap [y, x];
+				float locationHeight = heightMap[y, x];
 
 				// used for slope texturing
 				var maxDifference = 0.0f;
@@ -133,7 +134,7 @@ public class Texturer
 							continue;
 						}
 
-						var temp = Mathf.Abs(heightMap [y, x] - heightMap [ny, nx]);
+						var temp = Mathf.Abs(heightMap[y, x] - heightMap[ny, nx]);
 
 						if (temp > maxDifference) {
 							maxDifference = temp;
@@ -143,19 +144,26 @@ public class Texturer
 
 				if (locationHeight < mountainPeekHeight && maxDifference < slopeValue && locationHeight > waterHeight) {
 					int rnd = randomArray[y, x];
-					var rndBasedOnLocation = rnd + (int) locationHeight * 100; 			// random location of trees	
-					rndBasedOnLocation += (int) locationHeight * 100; 					// fewer trees as it gets higher
-					float rndHeight = (rnd * 0.0015f + 0.3f) - (0.3f * locationHeight); // smaller trees where height is extreme (less o2)
-					int rndPrototype = rnd < 200 ? 0 : rnd < 400 ? 1 : 2; 			    // mix of three tree prototypes
 
-					if (rndBasedOnLocation < treeStrength) {
+					// random location of trees	
+					var temp = Mathf.Floor(locationHeight * treeStrength) - 0.4f * treeStrength;
+					float rndBasedOnLocation = (float)rnd;
+					if (temp != 0) { 
+						rndBasedOnLocation += (float)treeStrength / 2.0f;
+					} 
+
+					if (rndBasedOnLocation < (float)treeStrength) {
+						// smaller trees where the altitude increases (less o2)
+						float rndHeight = treeHeightFactor - (rnd % treeHeightFactor) - temp / 1.2f;
+						int rndPrototype = rnd % 3; // mix of three tree prototypes
+
 						// add random trees	
 						var tI = new TreeInstance();
 						tI.prototypeIndex = rndPrototype;
 						tI.heightScale = rndHeight;
 						tI.widthScale = tI.heightScale;
 						tI.color = Color.white;
-						tI.position = new Vector3((float) x / width, 0.0f, (float) y / height);
+						tI.position = new Vector3((float) x / width, -20.0f, (float) y / height);
 
 						treeInstances.Add(tI);
 					}
