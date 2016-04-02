@@ -7,6 +7,7 @@ public class Texturer
 	public float slopeValue = 0.002f;
 	public float mountainPeekHeight = 0.56f;
 	public float waterHeight = 0.44f;
+	public float shoreHeight;
 	public float treeHeightFactor;
 	public int treeStrength;
 	private int width;
@@ -57,7 +58,7 @@ public class Texturer
 
 				var rnd = randomArray[y, x] * 0.000019;
 
-				if (locationHeight < waterHeight) {
+				if (locationHeight - shoreHeight < waterHeight) {
 					map[y, x, 0] = 0;
 					map[y, x, 1] = 0;
 					map[y, x, 2] = locationHeight;
@@ -146,7 +147,7 @@ public class Texturer
 					int rnd = randomArray[y, x];
 
 					// random location of trees	
-					var temp = Mathf.Floor(locationHeight * treeStrength) - 0.4f * treeStrength;
+					var temp = Mathf.Floor(locationHeight * (float)treeStrength) - 0.4f * (float)treeStrength;
 					float rndBasedOnLocation = (float)rnd;
 					if (temp != 0) { 
 						rndBasedOnLocation += (float)treeStrength / 2.0f;
@@ -154,7 +155,10 @@ public class Texturer
 
 					if (rndBasedOnLocation < (float)treeStrength) {
 						// smaller trees where the altitude increases (less o2)
-						float rndHeight = treeHeightFactor - (rnd % treeHeightFactor) - temp / 1.2f;
+						float rndHeight = treeHeightFactor - (rnd % treeHeightFactor);
+						if (treeStrength < 3) {
+							rnd += (int)temp;
+						}
 						int rndPrototype = rnd % 3; // mix of three tree prototypes
 
 						// add random trees	

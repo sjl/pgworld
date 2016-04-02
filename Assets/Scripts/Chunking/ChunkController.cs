@@ -45,6 +45,7 @@ public class ChunkController : MonoBehaviour {
 	public float slopeValue;
 	public float mountainPeekHeight;
 	public float waterHeight;
+	public float shoreHeight = 0.001f;
 
 	public int reverseErosionIterations = 10;
 	public float reverseErosionTalus = 0.001f;
@@ -65,7 +66,7 @@ public class ChunkController : MonoBehaviour {
 
 	public GameObject[] treePrefab;
 	private TreePrototype[] treeProto;
-	public int treeStrength = 5;
+	public int treeStrength = 10;
 	public float treeHeightFactor = 2.5f;
 
 	private int grassType = 0;
@@ -151,6 +152,7 @@ public class ChunkController : MonoBehaviour {
 		texturer.slopeValue = slopeValue;
 		texturer.mountainPeekHeight = mountainPeekHeight;
 		texturer.waterHeight = waterHeight;
+		texturer.shoreHeight = shoreHeight;
 		splats = new SplatPrototype[diffuses.Length];
 
 		texturer.treeHeightFactor = treeHeightFactor;
