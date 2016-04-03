@@ -61,30 +61,14 @@ public class SoundController : MonoBehaviour {
 		underwaterLevel = chunk.terrainHeight * chunk.waterHeight;
 	}
 
-	private float clamp(float value, float min, float max) {
-		if (value < min) {
-			return min;
-		} else if (value > max) {
-			return max;
-		} else {
-			return value;
-		}
-	}
-	
-	private float expand(float value, float range) {
-		// Expand the value that's expected to be within range of 0.5 to between
-		// 0 and 1.
-		return (value - (0.5f - range)) * (1.0f / (2 * range));
-	}
-
 	void Update () {
 		float py = player.transform.position.y;
 
 		float vol = windNoise.Get(Time.fixedTime * windBlendRate, 0.0f);
-		float windVolume = clamp(expand(vol, 0.1f), 0.1f, 1.0f);
+		float windVolume = PGMath.clamp(PGMath.expand(vol, 0.1f), 0.1f, 1.0f);
 
 		vol = birdNoise.Get(Time.fixedTime * birdBlendRate, 0.0f);
-		float birdVolume = clamp(expand(vol, 0.1f), 0.1f, 1.0f);
+		float birdVolume = PGMath.clamp(PGMath.expand(vol, 0.1f), 0.1f, 1.0f);
 
 		if (py < underwaterLevel) {
 			lightWind.volume = 0.0f;

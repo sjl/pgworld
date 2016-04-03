@@ -5,16 +5,32 @@ using System.Collections.Generic;
 public class Texturer
 {
 	public float slopeValue = 0.002f;
-	public float mountainPeekHeight = 0.56f;
+	public float mountainPeekStart = 0.51f;
+	public float mountainPeekHeight = 0.52f;
 	public float waterHeight = 0.44f;
 	public float shoreHeight;
 	public float treeHeightFactor;
 	public int treeStrength;
+
 	private int width;
 	private int height;
 	private Terrain terrain;
 	private TerrainData terrainData;
 	private List<TreeInstance> TreeInstances;
+
+
+	private PerlinNoise textureBlendNoise;
+	private float textureBlendNoiseBaseOctave = 0.5f;
+	private float[] textureBlendNoiseWeights = {
+		100.0f, 1.0f
+	};
+
+	public void Init() {
+		textureBlendNoise = new PerlinNoise();
+		textureBlendNoise.baseOctave = textureBlendNoiseBaseOctave;
+		textureBlendNoise.weights = textureBlendNoiseWeights;
+		textureBlendNoise.Init();
+	}
 
 	public float[,,] Texture(float[,] heightMap, float[,,] map, int[,] randomArray) {
 		this.width = heightMap.GetLength(0);
@@ -56,7 +72,8 @@ public class Texturer
 					}
 				}
 
-				var rnd = randomArray[y, x] * 0.0000001;
+				var speed = 0.2f;
+				var rnd = PGMath.clamp(PGMath.expand(textureBlendNoise.Get(x * speed, y * speed), 0.15f), 0.0f, 1.0f);
 
 				if (locationHeight - shoreHeight < waterHeight) {
 					map[y, x, 0] = 0;
@@ -64,28 +81,24 @@ public class Texturer
 					map[y, x, 2] = locationHeight;
 					map[y, x, 3] = 0;
 					map[y, x, 4] = 1 - locationHeight;
-				} else if (locationHeight >= (mountainPeekHeight + rnd)){ // mountain tops texturing
-					var halfDiff = (1 - mountainPeekHeight) / 2;
-					var quarterDiff = halfDiff / 2;
-					if (locationHeight >= (mountainPeekHeight + halfDiff + quarterDiff)) { // highest peek
-						map[y, x, 0] = 0;
-						map[y, x, 1] = 0;
-						map[y, x, 2] = 1 - locationHeight;
-						map[y, x, 3] = locationHeight;
-						map[y, x, 4] = 0;
-					} else if (locationHeight <= (mountainPeekHeight + halfDiff)) { // lowest peek
-						map[y, x, 0] = 0;
-						map[y, x, 1] = locationHeight * 0.05f;
-						map[y, x, 2] = locationHeight * 0.9f;
-						map[y, x, 3] = 1 - locationHeight * 0.85f;
-						map[y, x, 4] = 0;
-					} else { // middle peek
-						map[y, x, 0] = 0;
-						map[y, x, 1] = 0;
-						map[y, x, 2] = 1 - locationHeight * 0.5f;
-						map[y, x, 3] = locationHeight * 0.5f;
-						map[y, x, 4] = 0;
-					}
+				} else if (locationHeight >= mountainPeekHeight){ // mountain tops texturing
+					float lerp = 1.0f;
+					lerp *= rnd;
+					lerp = Mathf.Lerp(0.5f, 1.0f, lerp);
+					map[y, x, 0] = 0;
+					map[y, x, 1] = 0;
+					map[y, x, 2] = 1 - lerp;
+					map[y, x, 3] = lerp;
+					map[y, x, 4] = 0;
+				} else if (locationHeight >= mountainPeekStart){ // mountain tops texturing
+					float lerp = (locationHeight - mountainPeekStart) / (mountainPeekHeight - mountainPeekStart);
+					lerp *= rnd;
+
+					map[y, x, 0] = 0;
+					map[y, x, 1] = 0;
+					map[y, x, 2] = 1 - lerp;
+					map[y, x, 3] = lerp;
+					map[y, x, 4] = 0;
 				} else if (maxDifference > slopeValue) { // slope texturing
 					map[y, x, 0] = 0;
 					map[y, x, 1] = 0.15f;

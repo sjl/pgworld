@@ -43,6 +43,7 @@ public class ChunkController : MonoBehaviour {
 	public Texture2D[] normals;
 	private SplatPrototype[] splats;
 	public float slopeValue;
+	public float mountainPeekStart;
 	public float mountainPeekHeight;
 	public float waterHeight;
 	public float shoreHeight = 0.001f;
@@ -148,8 +149,10 @@ public class ChunkController : MonoBehaviour {
 		thermalEroder.reverse = false;
 		thermalEroder.iterations = this.thermalErosionIterations;
 
-		texturer = new Texturer ();
+		texturer = new Texturer();
+		texturer.Init();
 		texturer.slopeValue = slopeValue;
+		texturer.mountainPeekStart = mountainPeekStart;
 		texturer.mountainPeekHeight = mountainPeekHeight;
 		texturer.waterHeight = waterHeight;
 		texturer.shoreHeight = shoreHeight;
