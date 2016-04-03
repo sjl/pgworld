@@ -4,6 +4,14 @@ using System.Collections.Generic;
 
 public class Texturer
 {
+	const int GRASS_LOW_A = 0;
+	const int GRASS_LOW_B = 1;
+	const int GRASS_HIGH = 2;
+	const int SLOPE_A = 3;
+	const int SLOPE_B = 4;
+	const int SNOW = 5;
+	const int UNDERWATER = 6;
+
 	public float slopeValue = 0.002f;
 	public float mountainPeekStart = 0.51f;
 	public float mountainPeekHeight = 0.52f;
@@ -18,7 +26,6 @@ public class Texturer
 	private TerrainData terrainData;
 	private List<TreeInstance> TreeInstances;
 
-
 	private PerlinNoise textureBlendNoise;
 	private float textureBlendNoiseBaseOctave = 0.5f;
 	private float[] textureBlendNoiseWeights = {
@@ -32,16 +39,20 @@ public class Texturer
 		textureBlendNoise.Init();
 	}
 
-	public float[,,] Texture(float[,] heightMap, float[,,] map, int[,] randomArray) {
+	public float[,,] Texture(
+			float[,] heightMap, float[,,] map,
+			int[,] randomArray, int ox, int oy) {
 		this.width = heightMap.GetLength(0);
 		this.height = heightMap.GetLength(1);
 
-		SlopeAndHeightTexture(heightMap, map, randomArray);
+		SlopeAndHeightTexture(heightMap, map, randomArray, ox, oy);
 
 		return map;
 	}
-								
-	private void SlopeAndHeightTexture(float[,] heightMap, float[,,] map, int[,] randomArray)
+
+	private void SlopeAndHeightTexture(
+			float[,] heightMap, float[,,] map, int[,] randomArray,
+			int ox, int oy)
 	{
 		for (int y = 0; y < height; y++) {
 			for (int x = 0; x < width; x++) {
@@ -72,45 +83,106 @@ public class Texturer
 					}
 				}
 
-				var speed = 0.2f;
-				var rnd = PGMath.clamp(PGMath.expand(textureBlendNoise.Get(x * speed, y * speed), 0.15f), 0.0f, 1.0f);
+				var slopeNoiseSpeed = 0.25f;
+				var slopeNoise = PGMath.clamp(PGMath.expand(
+							textureBlendNoise.Get(
+								(ox + x) * slopeNoiseSpeed,
+								(oy + y) * slopeNoiseSpeed
+							), 0.10f),
+						0.0f, 1.0f);
 
 				if (locationHeight - shoreHeight < waterHeight) {
-					map[y, x, 0] = 0;
-					map[y, x, 1] = 0;
-					map[y, x, 2] = locationHeight;
-					map[y, x, 3] = 0;
-					map[y, x, 4] = 1 - locationHeight;
-				} else if (locationHeight >= mountainPeekHeight){ // mountain tops texturing
-					float lerp = 1.0f;
-					lerp *= rnd;
-					lerp = Mathf.Lerp(0.5f, 1.0f, lerp);
-					map[y, x, 0] = 0;
-					map[y, x, 1] = 0;
-					map[y, x, 2] = 1 - lerp;
-					map[y, x, 3] = lerp;
-					map[y, x, 4] = 0;
-				} else if (locationHeight >= mountainPeekStart){ // mountain tops texturing
-					float lerp = (locationHeight - mountainPeekStart) / (mountainPeekHeight - mountainPeekStart);
-					lerp *= rnd;
+					var slope = locationHeight;
+					float slopeA = Mathf.Lerp(0.0f, slope, slopeNoise);
 
-					map[y, x, 0] = 0;
-					map[y, x, 1] = 0;
-					map[y, x, 2] = 1 - lerp;
-					map[y, x, 3] = lerp;
-					map[y, x, 4] = 0;
+					map[y, x, GRASS_LOW_A] = 0;
+					map[y, x, GRASS_LOW_B] = 0;
+					map[y, x, GRASS_HIGH] = 0;
+					map[y, x, SLOPE_A] = slopeA;
+					map[y, x, SLOPE_B] = (slope - slopeA);
+					map[y, x, SNOW] = 0;
+					map[y, x, UNDERWATER] = 1 - locationHeight;
+				} else if (locationHeight >= mountainPeekHeight){ // mountain tops texturing
+					var noiseSpeed = 0.2f;
+					var noise = PGMath.clamp(PGMath.expand(
+								textureBlendNoise.Get(
+									(ox + x) * noiseSpeed, (oy + y) * noiseSpeed
+								), 0.1f),
+							0.0f, 1.0f);
+
+					float lerp = Mathf.Lerp(0.3f, 1.0f, noise);
+					lerp += 10 * (locationHeight - mountainPeekHeight);
+					lerp = PGMath.clamp(lerp, 0.0f, 1.0f);
+
+					var slope = 1 - lerp;
+					float slopeA = Mathf.Lerp(0.0f, slope, slopeNoise);
+
+					map[y, x, GRASS_LOW_A] = 0;
+					map[y, x, GRASS_LOW_B] = 0;
+					map[y, x, GRASS_HIGH] = 0;
+					map[y, x, SLOPE_A] = slopeA;
+					map[y, x, SLOPE_B] = (slope - slopeA);
+					map[y, x, SNOW] = lerp;
+					map[y, x, UNDERWATER] = 0;
+				} else if (locationHeight >= mountainPeekStart){ // mountain tops texturing
+					var noiseSpeed = 0.2f;
+					var noise = PGMath.clamp(PGMath.expand(
+								textureBlendNoise.Get(
+									(ox + x) * noiseSpeed, (oy + y) * noiseSpeed
+								), 0.1f),
+							0.0f, 1.0f);
+
+					float lerp = (locationHeight - mountainPeekStart) / (mountainPeekHeight - mountainPeekStart);
+					lerp *= noise;
+
+					var slope = 1 - lerp;
+					float slopeA = Mathf.Lerp(0.0f, slope, slopeNoise);
+
+					map[y, x, GRASS_LOW_A] = 0;
+					map[y, x, GRASS_LOW_B] = 0;
+					map[y, x, GRASS_HIGH] = 0;
+					map[y, x, SLOPE_A] = slopeA;
+					map[y, x, SLOPE_B] = (slope - slopeA);
+					map[y, x, SNOW] = lerp;
+					map[y, x, UNDERWATER] = 0;
 				} else if (maxDifference > slopeValue) { // slope texturing
-					map[y, x, 0] = 0;
-					map[y, x, 1] = 0.15f;
-					map[y, x, 2] = 0.84f;
-					map[y, x, 3] = 0.01f;
-					map[y, x, 4] = 0;
+					var slope = 0.84f;
+					float slopeA = Mathf.Lerp(0.0f, slope, slopeNoise);
+
+					map[y, x, GRASS_LOW_A] = 0;
+					map[y, x, GRASS_LOW_B] = 0;
+					map[y, x, GRASS_HIGH] = 0.15f;
+					map[y, x, SLOPE_A] = slopeA;
+					map[y, x, SLOPE_B] = (slope - slopeA);
+					map[y, x, SNOW] = 0.01f;
+					map[y, x, UNDERWATER] = 0;
 				} else { // default texturing based on height
-					map[y, x, 0] = 2*(1 - locationHeight)/3;
-					map[y, x, 1] = (1 - locationHeight)/3;
-					map[y, x, 2] = locationHeight;
-					map[y, x, 3] = 0;
-					map[y, x, 4] = 0;
+					var noiseSpeed = 0.05f;
+					var noise = PGMath.clamp(PGMath.expand(
+								textureBlendNoise.Get(
+									(ox + x) * noiseSpeed, (oy + y) * noiseSpeed
+								), 0.15f),
+							0.0f, 1.0f);
+
+					var lerp = (locationHeight - waterHeight)
+						/ (mountainPeekStart - waterHeight);
+
+					lerp = lerp * lerp;
+
+					float grass_low = (1 - lerp);
+
+					float a = Mathf.Lerp(0.0f, grass_low, noise);
+
+					var slope = lerp;
+					float slopeA = Mathf.Lerp(0.0f, slope, slopeNoise);
+
+					map[y, x, GRASS_LOW_A] = a;
+					map[y, x, GRASS_LOW_B] = grass_low - a;
+					map[y, x, GRASS_HIGH] = 0;
+					map[y, x, SLOPE_A] = slopeA;
+					map[y, x, SLOPE_B] = (slope - slopeA);
+					map[y, x, SNOW] = 0;
+					map[y, x, UNDERWATER] = 0;
 				}
 			}
 		}
@@ -156,7 +228,7 @@ public class Texturer
 					}
 				}
 
-				if (locationHeight < mountainPeekHeight && maxDifference < slopeValue && locationHeight > waterHeight) {
+				if (locationHeight < mountainPeekStart && maxDifference < slopeValue && locationHeight > waterHeight) {
 					int rnd = randomArray[y, x];
 
 					// random location of trees	
@@ -180,7 +252,7 @@ public class Texturer
 						tI.heightScale = rndHeight;
 						tI.widthScale = tI.heightScale;
 						tI.color = Color.white;
-						tI.position = new Vector3((float) x / width, -20.0f, (float) y / height);
+						tI.position = new Vector3((float) x / width, -0.1f, (float) y / height);
 
 						treeInstances.Add(tI);
 					}

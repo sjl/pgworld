@@ -198,16 +198,22 @@ public class ChunkController : MonoBehaviour {
 		ensureChunk(new ChunkCoord(-1, 0), true);
 	}
 
-	void noiseHeightmap(ChunkCoord c, float[,] heightmap) {
-		int ox = c.x * chunkResolution - c.x - fringeSize;
-		int oz = c.z * chunkResolution - c.z - fringeSize;
+	int getWorldOX(ChunkCoord c) {
+		return (c.x * chunkResolution - c.x - fringeSize);
+	}
+	int getWorldOZ(ChunkCoord c) {
+		return (c.z * chunkResolution - c.z - fringeSize);
+	}
 
+	void noiseHeightmap(ChunkCoord c, float[,] heightmap) {
 		int width = heightmap.GetLength(0);
 		int height = heightmap.GetLength(1);
 
 		for (int z = 0; z < height; z++) {
 			for (int x = 0; x < width; x++) {
-				heightmap[z, x] = noise.Get(ox + x, oz + z);
+				heightmap[z, x] = noise.Get(
+						x + getWorldOX(c),
+						z + getWorldOZ(c));
 			}
 		}
 	}
@@ -218,11 +224,15 @@ public class ChunkController : MonoBehaviour {
 		thermalEroder.Erode(heightmap);
 	}
 
-	float[,,] textureHeightmap(float[,] heightmap, int[,] randomArray) {
+	float[,,] textureHeightmap(ChunkCoord c, float[,] heightmap, int[,] randomArray) {
 		// determain the mix of textures 1, 2, 3 and 4 to use
-		var splatmap = new float[heightmap.GetLength(0), heightmap.GetLength(1), diffuses.Length];
+		var splatmap = new float[
+			heightmap.GetLength(0),
+			heightmap.GetLength(1),
+			diffuses.Length];
 
-		splatmap = texturer.Texture(heightmap, splatmap, randomArray);
+		splatmap = texturer.Texture(
+				heightmap, splatmap, randomArray, getWorldOX(c), getWorldOZ(c));
 
 		return splatmap;
 	}
@@ -250,7 +260,7 @@ public class ChunkController : MonoBehaviour {
 
 		heightmap = extractChunk(heightmap);
 
-		var splatmap = textureHeightmap(heightmap, randomArray);
+		var splatmap = textureHeightmap(c, heightmap, randomArray);
 
 		var treeInstances = treePlacement(heightmap, randomArray);
 
