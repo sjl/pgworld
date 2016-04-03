@@ -20,8 +20,7 @@ public class UnderWater : MonoBehaviour {
 	public float deepLevel = 0.0f;
 
 	void Start() {
-		
-		underwaterLevel = (chunk.GetComponent<ChunkController>().terrainHeight)*(chunk.GetComponent<ChunkController>().waterHeight);
+		underwaterLevel = (chunk.GetComponent<ChunkController>().terrainHeight) * (chunk.GetComponent<ChunkController>().waterHeight);
 		calculatedDeepLevel = underwaterLevel - deepLevel;
 		projector.transform.position = new Vector3(transform.position.x, underwaterLevel, transform.position.z);
 		above = new Vector3(0.0f, 0.0f, 0.0f);
@@ -45,7 +44,7 @@ public class UnderWater : MonoBehaviour {
 
 	void SetUnderwater() {
 		float depth = underwaterLevel - transform.position.y;
-		float percentDepth = depth / calculatedDeepLevel;
+		float percentDepth = depth / (underwaterLevel - calculatedDeepLevel);
 		if (percentDepth > 1.0f) {
 			percentDepth = 1.0f;
 		}

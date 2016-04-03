@@ -48,6 +48,8 @@ public class ChunkController : MonoBehaviour {
 	public float waterHeight;
 	public float shoreHeight = 0.001f;
 
+	public bool enableAsync = true;
+
 	public int reverseErosionIterations = 10;
 	public float reverseErosionTalus = 0.001f;
 	public float reverseErosionStrength = 1.0f;
@@ -406,7 +408,7 @@ public class ChunkController : MonoBehaviour {
 	}
 
 	void Update () {
-		drainHeightmapQueue(false);
+		drainHeightmapQueue(!enableAsync);
 
 		float px = player.transform.position.x;
 		float pz = player.transform.position.z;
@@ -417,8 +419,8 @@ public class ChunkController : MonoBehaviour {
 		for (int row = 0; row <= chunkHorizon; row++) {
 			int stripWidth = chunkHorizon - row;
 			for (int dx = -stripWidth; dx <= stripWidth; dx++) {
-				ensureChunk(new ChunkCoord(cx + dx, cz + row), true);
-				ensureChunk(new ChunkCoord(cx + dx, cz - row), true);
+				ensureChunk(new ChunkCoord(cx + dx, cz + row), enableAsync);
+				ensureChunk(new ChunkCoord(cx + dx, cz - row), enableAsync);
 			}
 		}
 		// for (int dx = -chunkHorizon; dx <= chunkHorizon; dx++) {
