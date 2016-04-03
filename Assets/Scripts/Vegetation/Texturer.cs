@@ -56,7 +56,7 @@ public class Texturer
 					}
 				}
 
-				var rnd = randomArray[y, x] * 0.000019;
+				var rnd = randomArray[y, x] * 0.0000001;
 
 				if (locationHeight - shoreHeight < waterHeight) {
 					map[y, x, 0] = 0;
@@ -159,7 +159,7 @@ public class Texturer
 						if (treeStrength < 3) {
 							rnd += (int)temp;
 						}
-						int rndPrototype = rnd % 3; // mix of three tree prototypes
+						int rndPrototype = (y + x) % 3; // mix of three tree prototypes
 
 						// add random trees	
 						var tI = new TreeInstance();

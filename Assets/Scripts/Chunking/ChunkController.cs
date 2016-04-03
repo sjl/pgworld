@@ -66,7 +66,7 @@ public class ChunkController : MonoBehaviour {
 
 	public GameObject[] treePrefab;
 	private TreePrototype[] treeProto;
-	public int treeStrength = 10;
+	public int treeStrength = 100;
 	public float treeHeightFactor = 2.5f;
 
 	private int grassType = 0;
@@ -354,7 +354,7 @@ public class ChunkController : MonoBehaviour {
 				var randomArray = new int[heightmapResolution, heightmapResolution];
 				for (var i = 0; i < heightmapResolution; i++) {
 					for (var j = 0; j < heightmapResolution; j++) {
-						randomArray[i,j] = UnityEngine.Random.Range(0, 600);
+						randomArray[i,j] = UnityEngine.Random.Range(0, 100000);
 					}
 				}
 
